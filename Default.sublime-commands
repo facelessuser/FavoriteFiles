@@ -1,0 +1,14 @@
+[
+    {
+        "caption": "Favorite Files: Open File",
+        "command": "select_favorite_file"
+    },
+    {
+        "caption": "Favorite Files: Add File",
+        "command": "add_favorite_file"
+    },
+    {
+        "caption": "Favorite Files: Remove File",
+        "command": "remove_favorite_file"
+    }
+]
