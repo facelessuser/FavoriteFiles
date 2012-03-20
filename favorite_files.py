@@ -70,6 +70,7 @@ def load_favorite_files(force=False):
             with open(FILES, "r") as f:
                 content = f.read()
             file_list = json.loads(content)
+            FileList.last_access = time()
             FileList.files = file_list
         except:
             errors = True
