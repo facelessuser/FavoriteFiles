@@ -14,7 +14,7 @@ import sys
 lib = join(sublime.packages_path(), 'FavoriteFiles')
 if not lib in sys.path:
     sys.path.append(lib)
-from lib.comments.json import sanitize_json
+from lib.file_strip.json import sanitize_json
 
 FILES = join(sublime.packages_path(), 'User', 'favorite_files.json')
 
