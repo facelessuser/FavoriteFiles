@@ -54,6 +54,7 @@ def create_favorite_list(l, force=False):
             j = json.dumps(l, sort_keys=True, indent=4, separators=(',', ': '))
             with open(FILES, 'w') as f:
                 f.write(j + "\n")
+            FileList.last_access = time()
         except:
             sublime.error_message('Failed to create favorite_files.json!')
             errors = True
