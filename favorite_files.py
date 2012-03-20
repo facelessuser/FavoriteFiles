@@ -6,9 +6,15 @@ Copyright (c) 2012 Isaac Muse <isaacmuse@gmail.com>
 
 import sublime
 import sublime_plugin
-from os.path import join, exists, normpath, basename
+from os.path import join, exists, normpath, basename, getmtime
 import json
-from time import time
+import sys
+
+# Pull in included modules
+lib = join(sublime.packages_path(), 'FavoriteFiles')
+if not lib in sys.path:
+    sys.path.append(lib)
+from lib.comments.json import sanitize_json
 
 FILES = join(sublime.packages_path(), 'User', 'favorite_files.json')
 
@@ -16,7 +22,6 @@ FILES = join(sublime.packages_path(), 'User', 'favorite_files.json')
 class FileList:
     files = {}
     last_access = 0
-    max_time = 600
 
     @classmethod
     def get(cls, s):
@@ -39,10 +44,6 @@ class FileList:
             del cls.files[s]
 
     @classmethod
-    def load(cls):
-        cls.last_access = time()
-
-    @classmethod
     def keys(cls):
         return [x for x in cls.files]
 
@@ -54,7 +55,7 @@ def create_favorite_list(l, force=False):
             j = json.dumps(l, sort_keys=True, indent=4, separators=(',', ': '))
             with open(FILES, 'w') as f:
                 f.write(j + "\n")
-            FileList.last_access = time()
+            FileList.last_access = getmtime(FILES)
         except:
             sublime.error_message('Failed to create favorite_files.json!')
             errors = True
@@ -66,12 +67,13 @@ def load_favorite_files(force=False):
     if not exists(FILES):
         if create_favorite_list({}, True):
             errors = True
-    if not errors and (force or time() - FileList.last_access > FileList.max_time):
+    if not errors and (force or getmtime(FILES) != FileList.last_access):
         try:
             with open(FILES, "r") as f:
-                content = f.read()
+                # Allow C style comments and be forgiving of trailing commas
+                content = sanitize_json(f.read(), True)
             file_list = json.loads(content)
-            FileList.last_access = time()
+            FileList.last_access = getmtime(FILES)
             FileList.files = file_list
         except:
             errors = True
@@ -81,9 +83,10 @@ def load_favorite_files(force=False):
 
 class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
     def open_file(self, value):
-        f = FileList.get(self.files[value])
-        if f != None:
-            self.window.open_file(f)
+        if value >= 0:
+            f = FileList.get(self.files[value])
+            if f != None:
+                self.window.open_file(f)
 
     def run(self):
         if not load_favorite_files():
@@ -143,10 +146,11 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
 
 class RemoveFavoriteFileCommand(sublime_plugin.WindowCommand):
     def remove(self, value):
-        key = self.files[value]
-        if FileList.exists(key):
-            FileList.remove(key)
-            create_favorite_list(FileList.files, True)
+        if value >= 0:
+            key = self.files[value]
+            if FileList.exists(key):
+                FileList.remove(key)
+                create_favorite_list(FileList.files, True)
 
     def run(self):
         if not load_favorite_files():
