@@ -55,7 +55,7 @@ def create_favorite_list(l, force=False):
             with open(FILES, 'w') as f:
                 f.write(j + "\n")
         except:
-            sublime.error_message('Failed to create favorite_files.json')
+            sublime.error_message('Failed to create favorite_files.json!')
             errors = True
     return errors
 
@@ -66,10 +66,14 @@ def load_favorite_files(force=False):
         if create_favorite_list({}, True):
             errors = True
     if not errors and (force or time() - FileList.last_access > FileList.max_time):
-        with open(FILES, "r") as f:
-            content = f.read()
-        file_list = json.loads(content)
-        FileList.files = file_list
+        try:
+            with open(FILES, "r") as f:
+                content = f.read()
+            file_list = json.loads(content)
+            FileList.files = file_list
+        except:
+            errors = True
+            sublime.error_message('Failed to read favorite_files.json!')
     return errors
 
 
