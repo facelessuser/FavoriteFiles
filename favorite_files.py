@@ -6,7 +6,7 @@ Copyright (c) 2012 Isaac Muse <isaacmuse@gmail.com>
 
 import sublime
 import sublime_plugin
-from os.path import join, exists, normpath, basename, getmtime
+from os.path import join, exists, basename, getmtime
 import json
 import sys
 
@@ -18,17 +18,12 @@ from lib.file_strip.json import sanitize_json
 
 FILES = join(sublime.packages_path(), 'User', 'favorite_files_list.json')
 
+FAVORITE_LIST_VERSION = 1
+
 
 class FileList:
     files = {}
     last_access = 0
-
-    @classmethod
-    def get(cls, s):
-        if cls.exists(s):
-            return normpath(cls.files["files"][s])
-        else:
-            return None
 
     @classmethod
     def remove_group(cls, s):
@@ -40,11 +35,11 @@ class FileList:
         cls.files["groups"][s] = {}
 
     @classmethod
-    def set(cls, s, path, group_name=None):
+    def set(cls, s, group_name=None):
         if group_name == None:
-            cls.files["files"][s] = path
+            cls.files["files"].append(s)
         else:
-            cls.files["groups"][group_name][s] = path
+            cls.files["groups"][group_name].append(s)
 
     @classmethod
     def exists(cls, s, group=False, group_name=None):
@@ -60,17 +55,17 @@ class FileList:
     def remove(cls, s, group_name=None):
         if group_name == None:
             if cls.exists(s):
-                del cls.files["files"][s]
+                cls.files["files"].remove(s)
         else:
             if cls.exists(s, group_name=group_name):
-                del cls.files["groups"][group_name][s]
+                cls.files["groups"][group_name].remove(s)
 
     @classmethod
     def all_files(cls, group_name=None):
         if group_name != None:
-            return [[v, k] for k, v in cls.files["groups"][group_name].items()]
+            return [[basename(path), path] for path in set(cls.files["groups"][group_name])]
         else:
-            return [[v, k] for k, v in cls.files["files"].items()]
+            return [[basename(path), path] for path in set(cls.files["files"])]
 
     @classmethod
     def group_count(cls):
@@ -79,6 +74,24 @@ class FileList:
     @classmethod
     def all_groups(cls):
         return [["Group: " + k, "%d files" % len(v)] for k, v in cls.files["groups"].items()]
+
+
+def update_list_format(file_list):
+    # Update list file from old format
+    file_list["version"] = FAVORITE_LIST_VERSION
+    file_list["files"] = [f for f in file_list["files"]]
+    for g in file_list["groups"]:
+        file_list["groups"][g] = [f for f in file_list["groups"][g]]
+    create_favorite_list(file_list, force=True)
+
+
+def clean_orphaned_favorites(file_list):
+    file_list["files"] = [f for f in file_list["files"] if exists(f)]
+    for g in file_list["groups"]:
+        file_list["groups"][g] = [f for f in file_list["groups"][g] if exists(f)]
+        if len(file_list["groups"][g]) == 0:
+            del file_list["groups"][g]
+    create_favorite_list(file_list, force=True)
 
 
 def create_favorite_list(l, force=False):
@@ -95,10 +108,10 @@ def create_favorite_list(l, force=False):
     return errors
 
 
-def load_favorite_files(force=False):
+def load_favorite_files(force=False, clean=False):
     errors = False
     if not exists(FILES):
-        if create_favorite_list({"files": {}, "groups": {}}, True):
+        if create_favorite_list({"version": 1, "files": {}, "groups": {}}, True):
             errors = True
     if not errors and (force or getmtime(FILES) != FileList.last_access):
         try:
@@ -106,12 +119,25 @@ def load_favorite_files(force=False):
                 # Allow C style comments and be forgiving of trailing commas
                 content = sanitize_json(f.read(), True)
             file_list = json.loads(content)
+
+            # Update version format
+            if not "version" in file_list or file_list["version"] < FAVORITE_LIST_VERSION:
+                update_list_format(file_list)
+
+            if clean:
+                clean_orphaned_favorites(file_list)
+
             FileList.last_access = getmtime(FILES)
             FileList.files = file_list
         except:
             errors = True
             sublime.error_message('Failed to read favorite_files.json!')
     return errors
+
+
+class CleanOrphanedFavoritesCommand(sublime_plugin.ApplicationCommand):
+    def run(self):
+        load_favorite_files(force=True, clean=True)
 
 
 class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
@@ -170,7 +196,7 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
         for n in names:
             if not FileList.exists(n, group_name=group_name):
                 if exists(n):
-                    FileList.set(n, basename(n), group_name=group_name)
+                    FileList.set(n, group_name=group_name)
                     added += 1
                 else:
                     disk_omit_count += 1

@@ -10,5 +10,9 @@
     {
         "caption": "Favorite Files: Remove File(s)",
         "command": "remove_favorite_file"
+    },
+    {
+        "caption": "Favorite Files: Clean Orphaned Favorites",
+        "command": "clean_orphaned_favorites"
     }
 ]
