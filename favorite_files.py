@@ -32,7 +32,7 @@ class FileList:
 
     @classmethod
     def add_group(cls, s):
-        cls.files["groups"][s] = {}
+        cls.files["groups"][s] = []
 
     @classmethod
     def set(cls, s, group_name=None):
@@ -103,7 +103,7 @@ def create_favorite_list(l, force=False):
                 f.write(j + "\n")
             FileList.last_access = getmtime(FILES)
         except:
-            sublime.error_message('Failed to create favorite_files.json!')
+            sublime.error_message('Failed to create favorite_files_list.json!')
             errors = True
     return errors
 
@@ -111,8 +111,11 @@ def create_favorite_list(l, force=False):
 def load_favorite_files(force=False, clean=False):
     errors = False
     if not exists(FILES):
-        if create_favorite_list({"version": 1, "files": {}, "groups": {}}, True):
+        if create_favorite_list({"version": 1, "files": [], "groups": {}}, True):
+            sublime.error_message('Failed to cerate favorite_files_list.json!')
             errors = True
+        else:
+            force = True
     if not errors and (force or getmtime(FILES) != FileList.last_access):
         try:
             with open(FILES, "r") as f:
@@ -131,7 +134,7 @@ def load_favorite_files(force=False, clean=False):
             FileList.files = file_list
         except:
             errors = True
-            sublime.error_message('Failed to read favorite_files.json!')
+            sublime.error_message('Failed to read favorite_files_list.json!')
     return errors
 
 
