@@ -63,9 +63,9 @@ class FileList:
     @classmethod
     def all_files(cls, group_name=None):
         if group_name != None:
-            return [[basename(path), path] for path in set(cls.files["groups"][group_name])]
+            return [[basename(path), path] for path in cls.files["groups"][group_name]]
         else:
-            return [[basename(path), path] for path in set(cls.files["files"])]
+            return [[basename(path), path] for path in cls.files["files"]]
 
     @classmethod
     def group_count(cls):
@@ -156,9 +156,16 @@ class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
                 else:
                     names.append(self.files[value][1])
 
+                count = 0
                 for n in names:
                     if exists(n):
-                        self.window.open_file(n)
+                        view = self.window.open_file(n)
+                        if view != None:
+                            active_group = self.window.active_group()
+                            if active_group >= 0:
+                                self.window.set_view_index(view, active_group, count)
+                            count += 1
+
                     else:
                         sublime.error_message("The following file does not exist:\n%s" % n)
             else:
@@ -193,7 +200,6 @@ class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
 # Single add only
 class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
     def add(self, names, group_name=None):
-        omit_count = 0
         disk_omit_count = 0
         added = 0
         for n in names:
@@ -203,14 +209,10 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
                     added += 1
                 else:
                     disk_omit_count += 1
-            else:
-                omit_count += 1
         if added:
             create_favorite_list(FileList.files, True)
-        if omit_count:
-            sublime.error_message("%d file(s) already already present!" % omit_count)
         if disk_omit_count:
-            message = "1 file does not exist on disk!" if disk_omit_count == 1 else "%d file(s) do not exist on disk!" % omit_count
+            message = "1 file does not exist on disk!" if disk_omit_count == 1 else "%d file(s) do not exist on disk!" % disk_omit_count
             sublime.error_message(message)
 
     def create_group(self, value):
@@ -233,15 +235,18 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
                 None
             )
 
-    def select_group(self, value):
+    def select_group(self, value, replace=False):
         if value >= 0:
-            self.add(self.name, self.groups[value][0].replace("Group: ", "", 1))
+            group_name = self.groups[value][0].replace("Group: ", "", 1)
+            if replace:
+                FileList.add_group(group_name)
+            self.add(self.name, group_name)
 
-    def show_groups(self):
+    def show_groups(self, replace=False):
         self.groups = FileList.all_groups()
         self.window.show_quick_panel(
             self.groups,
-            self.select_group
+            lambda x: self.select_group(x, replace=replace)
         )
 
     def group_answer(self, value):
@@ -258,13 +263,15 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
                 )
             elif value == 2:
                 self.show_groups()
+            elif value == 3:
+                self.show_groups(replace=True)
             else:
                 sublime.error_message("Invalid Selection!")
 
     def group_prompt(self):
         self.group = ["No Group", "Create Group"]
         if FileList.group_count() > 0:
-            self.group.append("Add to Group")
+            self.group += ["Add to Group", "Replace Group"]
 
         self.window.show_quick_panel(
             self.group,
