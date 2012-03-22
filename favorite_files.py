@@ -166,6 +166,7 @@ class CleanOrphanedFavoritesCommand(sublime_plugin.ApplicationCommand):
 class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
     def open_file(self, value, group=False):
         if value >= 0:
+            active_group = self.window.active_group()
             if value < self.num_files or (group and value < self.num_files + 1):
                 # Open global file, file in group, or all fiels in group
                 names = []
@@ -186,7 +187,6 @@ class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
                     if exists(n):
                         view = self.window.open_file(n)
                         if view != None:
-                            active_group = self.window.active_group()
                             if active_group >= 0:
                                 self.window.set_view_index(view, active_group, count)
                             count += 1
