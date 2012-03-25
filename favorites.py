@@ -4,7 +4,7 @@ Licensed under MIT
 Copyright (c) 2012 Isaac Muse <isaacmuse@gmail.com>
 '''
 import sublime
-from os.path import exists, basename, getmtime, join, normpath
+from os.path import exists, basename, getmtime, join, normpath, splitext
 import json
 import sys
 
@@ -19,7 +19,6 @@ FAVORITE_LIST_VERSION = 1
 class FavObj:
     files = {}
     projects = set([])
-    project_settings = {}
     last_access = 0
     global_file = ""
     file_name = ""
@@ -46,32 +45,25 @@ class FavProjects():
         return True if win_id != None and win_id in obj.projects else False
 
     @classmethod
-    def is_project_enabled(cls, obj, win_id):
+    def project_adjust(cls, obj, win_id):
         enabled = cls.is_project_tracked(obj, win_id)
         if enabled:
             project = cls.get_project(win_id)
+            if project != None:
+                project_favs = splitext(project)[0] + "-favs.json"
             # Make sure project is the new target
-            if project != obj.file_name:
-                obj.file_name = project
+            if project_favs != obj.file_name:
+                obj.file_name = project_favs
                 obj.last_access = 0
-            # If project does not exist
-            # Revert to global
-            if not exists(obj.file_name):
-                obj.file_name = obj.global_file
-                obj.last_access = 0
-                obj.project_settings.clear()
-                obj.projects.remove(win_id)
-                enabled = False
         elif not FavFileMgr.is_global_file(obj):
             obj.file_name = obj.global_file
-            obj.project_settings.clear()
             obj.last_access = 0
         return enabled
 
     @classmethod
     def has_project(cls, win_id):
         project = cls.get_project(win_id)
-        return project != None
+        return True if project != None else False
 
     @classmethod
     def get_project(cls, win_id):
@@ -90,12 +82,18 @@ class FavProjects():
                     if w['window_id'] == win_id:
                         if "workspace_name" in w:
                             if sublime.platform() == "windows":
+                                # Account for windows specific formatting
                                 project = normpath(w["workspace_name"].lstrip("/").replace("/", ":/", 1))
                             else:
                                 project = w["workspace_name"]
                             break
         except:
             pass
+
+        # Throw out empty project names
+        if project == None or project == "" or not exists(project):
+            project = None
+
         return project
 
 
@@ -127,18 +125,10 @@ class FavFileMgr():
     def create_favorite_list(cls, obj, file_list, force=False):
         errors = False
 
-        if not cls.is_global_file(obj):
-            # For per project favorites write the project settings
-            obj.project_settings['settings']['favorite_files'] = file_list
-            l = obj.project_settings
-        else:
-            # For Globals, just write the favorites
-            l = file_list
-
         if not exists(obj.file_name) or force:
             try:
                 # Save as a JSON file
-                j = json.dumps(l, sort_keys=True, indent=4, separators=(',', ': '))
+                j = json.dumps(file_list, sort_keys=True, indent=4, separators=(',', ': '))
                 with open(obj.file_name, 'w') as f:
                     f.write(j + "\n")
                 obj.last_access = getmtime(obj.file_name)
@@ -148,39 +138,7 @@ class FavFileMgr():
         return errors
 
     @classmethod
-    def load_project_favorites(cls, obj, clean=False):
-        errors = False
-        try:
-            with open(obj.file_name, "r") as f:
-                # Allow C style comments and be forgiving of trailing commas
-                content = sanitize_json(f.read(), True)
-            j = json.loads(content)
-            obj.project_settings = j
-            if not "settings" in j:
-                j['settings'] = {}
-                file_list = {"version": 1, "files": [], "groups": {}}
-                cls.create_favorite_list(obj, file_list, force=True)
-            elif not "favorite_files" in j["settings"]:
-                file_list = {"version": 1, "files": [], "groups": {}}
-                cls.create_favorite_list(obj, file_list, force=True)
-            else:
-                file_list = j['settings']['favorite_files']
-                if not "version" in file_list or file_list["version"] < FAVORITE_LIST_VERSION:
-                    j['settings']['favorite_files'] = cls.update_list_format(file_list)
-                    cls.create_favorite_list(obj, file_list, force=True)
-                if clean:
-                    j['settings']['favorite_files'] = cls.clean_orphaned_favorites(file_list)
-                    cls.create_favorite_list(obj, file_list, force=True)
-            # Update internal list and access times
-            obj.last_access = getmtime(obj.file_name)
-            obj.files = file_list
-        except:
-            errors = True
-            sublime.error_message('Failed to load %s!' % basename(obj.file_name))
-        return errors
-
-    @classmethod
-    def load_global_favorites(cls, obj, clean=False):
+    def load_favorites(cls, obj, clean=False):
         errors = False
         try:
             with open(obj.file_name, "r") as f:
@@ -212,22 +170,19 @@ class FavFileMgr():
         errors = False
 
         # Is project enabled
-        is_project = FavProjects.is_project_enabled(obj, win_id)
+        FavProjects.project_adjust(obj, win_id)
 
-        if not exists(obj.file_name) and not is_project:
+        if not exists(obj.file_name):
             # Create file list if it doesn't exist
             if cls.create_favorite_list(obj, {"version": 1, "files": [], "groups": {}}, force=True):
-                sublime.error_message('Failed to cerate favorite_files_list.json!')
+                sublime.error_message('Failed to cerate %s!' % basename(obj.file_name))
                 errors = True
             else:
                 force = True
 
         # Only reload if file has been written since last access (or if forced reload)
         if not errors and (force or getmtime(obj.file_name) != obj.last_access):
-            if not is_project:
-                errors = cls.load_global_favorites(obj, clean=clean)
-            else:
-                errors = cls.load_project_favorites(obj, clean=clean)
+            errors = cls.load_favorites(obj, clean=clean)
         return errors
 
 
@@ -246,6 +201,7 @@ class Favorites():
         return FavFileMgr.create_favorite_list(self.obj, self.obj.files, force=force)
 
     def toggle_per_projects(self, win_id):
+        errors = False
         # Clean out closed windows
         FavProjects.prune_projects(self.obj)
 
@@ -254,6 +210,9 @@ class Favorites():
         else:
             if FavProjects.has_project(win_id):
                 self.obj.projects.add(win_id)
+            else:
+                errors = True
+        return errors
 
     def remove_group(self, s):
         # Remove a group

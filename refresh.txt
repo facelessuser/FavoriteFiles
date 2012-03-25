@@ -1,0 +1,10 @@
+        ______                       _ __          _______ __         
+       / ____/___ __   ______  _____(_) /____     / ____(_) /__  _____
+      / /_  / __ `/ | / / __ \/ ___/ / __/ _ \   / /_  / / / _ \/ ___/
+     / __/ / /_/ /| |/ / /_/ / /  / / /_/  __/  / __/ / / /  __(__  ) 
+    /_/    \__,_/ |___/\____/_/  /_/\__/\___/  /_/   /_/_/\___/____/  
+
+Attemping to refresh session...
+
+This view is used to refresh your session in order to find the project file if it exists.
+To prevent the window from closing, this view will remain open if only one view remains.
