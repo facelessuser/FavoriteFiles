@@ -6,161 +6,16 @@ Copyright (c) 2012 Isaac Muse <isaacmuse@gmail.com>
 
 import sublime
 import sublime_plugin
-from os.path import join, exists, basename, getmtime
-import json
-import sys
+from os.path import join, exists
+from favorites import Favorites
 
-# Pull in included modules
-lib = join(sublime.packages_path(), 'FavoriteFiles')
-if not lib in sys.path:
-    sys.path.append(lib)
-from lib.file_strip.json import sanitize_json
-
-FILES = join(sublime.packages_path(), 'User', 'favorite_files_list.json')
-
-FAVORITE_LIST_VERSION = 1
+Favs = Favorites(join(sublime.packages_path(), 'User', 'favorite_files_list.json'))
 
 
-class FileList:
-    files = {}
-    last_access = 0
-
-    @classmethod
-    def remove_group(cls, s):
-        # Remove a group
-        if cls.exists(s, group=True):
-            del cls.files["groups"][s]
-
-    @classmethod
-    def add_group(cls, s):
-        # Add favorite group
-        cls.files["groups"][s] = []
-
-    @classmethod
-    def set(cls, s, group_name=None):
-        # Add file in global or group list
-        if group_name == None:
-            cls.files["files"].append(s)
-        else:
-            cls.files["groups"][group_name].append(s)
-
-    @classmethod
-    def exists(cls, s, group=False, group_name=None):
-        if group:
-            # See if group exists
-            return True if s in cls.files["groups"] else False
-        else:
-            # See if file in global or group list exists
-            if group_name == None:
-                return True if s in set(cls.files["files"]) else False
-            else:
-                return True if s in set(cls.files["groups"][group_name]) else False
-
-    @classmethod
-    def remove(cls, s, group_name=None):
-        # Remove file in group or global list
-        if group_name == None:
-            if cls.exists(s):
-                cls.files["files"].remove(s)
-        else:
-            if cls.exists(s, group_name=group_name):
-                cls.files["groups"][group_name].remove(s)
-
-    @classmethod
-    def all_files(cls, group_name=None):
-        # Return all files in group or global list
-        if group_name != None:
-            return [[basename(path), path] for path in cls.files["groups"][group_name]]
-        else:
-            return [[basename(path), path] for path in cls.files["files"]]
-
-    @classmethod
-    def group_count(cls):
-        # Return group count
-        return len(cls.files["groups"])
-
-    @classmethod
-    def all_groups(cls):
-        # Return all groups
-        return [["Group: " + k, "%d files" % len(v)] for k, v in cls.files["groups"].items()]
-
-
-def update_list_format(file_list):
-    # TODO: remove this when enough time passes
-    # Update list file from old format
-    file_list["version"] = FAVORITE_LIST_VERSION
-    file_list["files"] = [f for f in file_list["files"]]
-    for g in file_list["groups"]:
-        file_list["groups"][g] = [f for f in file_list["groups"][g]]
-    create_favorite_list(file_list, force=True)
-
-
-def clean_orphaned_favorites(file_list):
-    # Clean out dead links in global list and group lists
-    # Remove empty groups
-    file_list["files"] = [f for f in file_list["files"] if exists(f)]
-    for g in file_list["groups"]:
-        file_list["groups"][g] = [f for f in file_list["groups"][g] if exists(f)]
-        if len(file_list["groups"][g]) == 0:
-            del file_list["groups"][g]
-    create_favorite_list(file_list, force=True)
-
-
-def create_favorite_list(l, force=False):
-    errors = False
-    if not exists(FILES) or force:
-        try:
-            # Save as a JSON file
-            j = json.dumps(l, sort_keys=True, indent=4, separators=(',', ': '))
-            with open(FILES, 'w') as f:
-                f.write(j + "\n")
-            FileList.last_access = getmtime(FILES)
-        except:
-            sublime.error_message('Failed to create favorite_files_list.json!')
-            errors = True
-    return errors
-
-
-def load_favorite_files(force=False, clean=False):
-    errors = False
-    if not exists(FILES):
-        # Create file list if it doesn't exist
-        if create_favorite_list({"version": 1, "files": [], "groups": {}}, True):
-            sublime.error_message('Failed to cerate favorite_files_list.json!')
-            errors = True
-        else:
-            force = True
-
-    # Only reload if file has been written since last access (or if forced reload)
-    if not errors and (force or getmtime(FILES) != FileList.last_access):
-        try:
-            with open(FILES, "r") as f:
-                # Allow C style comments and be forgiving of trailing commas
-                content = sanitize_json(f.read(), True)
-            file_list = json.loads(content)
-
-            # TODO: remove this when enough time passes
-            # Update version format
-            if not "version" in file_list or file_list["version"] < FAVORITE_LIST_VERSION:
-                update_list_format(file_list)
-
-            # Clean out dead links
-            if clean:
-                clean_orphaned_favorites(file_list)
-
-            # Update internal list and access times
-            FileList.last_access = getmtime(FILES)
-            FileList.files = file_list
-        except:
-            errors = True
-            sublime.error_message('Failed to read favorite_files_list.json!')
-    return errors
-
-
-class CleanOrphanedFavoritesCommand(sublime_plugin.ApplicationCommand):
+class CleanOrphanedFavoritesCommand(sublime_plugin.WindowCommand):
     def run(self):
         # Clean out all dead links
-        load_favorite_files(force=True, clean=True)
+        Favs.load(force=True, clean=True, win_id=self.window.id())
 
 
 class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
@@ -196,7 +51,7 @@ class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
             else:
                 # Decend into group
                 value -= self.num_files
-                self.files = FileList.all_files(group_name=self.groups[value][0].replace("Group: ", "", 1))
+                self.files = Favs.all_files(group_name=self.groups[value][0].replace("Group: ", "", 1))
                 self.num_files = len(self.files)
                 self.groups = []
                 self.num_groups = 0
@@ -211,10 +66,10 @@ class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
                     sublime.error_message("No favorites found! Try adding some.")
 
     def run(self):
-        if not load_favorite_files():
-            self.files = FileList.all_files()
+        if not Favs.load(win_id=self.window.id()):
+            self.files = Favs.all_files()
             self.num_files = len(self.files)
-            self.groups = FileList.all_groups()
+            self.groups = Favs.all_groups()
             self.num_groups = len(self.groups)
             if self.num_files + self.num_groups > 0:
                 self.window.show_quick_panel(
@@ -231,16 +86,16 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
         added = 0
         # Iterate names and add them to group/global if not already added
         for n in names:
-            if not FileList.exists(n, group_name=group_name):
+            if not Favs.exists(n, group_name=group_name):
                 if exists(n):
-                    FileList.set(n, group_name=group_name)
+                    Favs.set(n, group_name=group_name)
                     added += 1
                 else:
                     # File does not exist on disk; cannot add
                     disk_omit_count += 1
         if added:
             # Save if files were added
-            create_favorite_list(FileList.files, True)
+            Favs.save(True)
         if disk_omit_count:
             # Alert that files could be added
             message = "1 file does not exist on disk!" if disk_omit_count == 1 else "%d file(s) do not exist on disk!" % disk_omit_count
@@ -252,13 +107,13 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
             # Require an actual name
             sublime.error_message("Please provide a valid group name.")
             repeat = True
-        elif FileList.exists(value, group=True):
+        elif Favs.exists(value, group=True):
             # Do not allow duplicates
             sublime.error_message("Group \"%s\" already exists.")
             repeat = True
         else:
             # Add group
-            FileList.add_group(value)
+            Favs.add_group(value)
             self.add(self.name, value)
         if repeat:
             # Ask again if name was not sufficient
@@ -275,13 +130,13 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
             group_name = self.groups[value][0].replace("Group: ", "", 1)
             if replace:
                 # Start with empty group for "Replace Group" selection
-                FileList.add_group(group_name)
+                Favs.add_group(group_name)
             # Add favorites
             self.add(self.name, group_name)
 
     def show_groups(self, replace=False):
         # Show availabe groups
-        self.groups = FileList.all_groups()
+        self.groups = Favs.all_groups()
         self.window.show_quick_panel(
             self.groups,
             lambda x: self.select_group(x, replace=replace)
@@ -311,7 +166,7 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
     def group_prompt(self):
         # Default options
         self.group = ["No Group", "Create Group"]
-        if FileList.group_count() > 0:
+        if Favs.group_count() > 0:
             # Options if groups already exit
             self.group += ["Add to Group", "Replace Group"]
 
@@ -407,8 +262,8 @@ class RemoveFavoriteFileCommand(sublime_plugin.WindowCommand):
                         return
                     if value == 0:
                         # Remove group
-                        FileList.remove_group(group_name)
-                        create_favorite_list(FileList.files, True)
+                        Favs.remove_group(group_name)
+                        Favs.save(True)
                         return
                     else:
                         # Remove group file
@@ -418,13 +273,13 @@ class RemoveFavoriteFileCommand(sublime_plugin.WindowCommand):
                     name = self.files[value][1]
 
                 # Remove file and save
-                FileList.remove(name, group_name=group_name)
-                create_favorite_list(FileList.files, True)
+                Favs.remove(name, group_name=group_name)
+                Favs.save(True)
             else:
                 # Decend into group
                 value -= self.num_files
                 group_name = self.groups[value][0].replace("Group: ", "", 1)
-                self.files = FileList.all_files(group_name=group_name)
+                self.files = Favs.all_files(group_name=group_name)
                 self.num_files = len(self.files)
                 self.groups = []
                 self.num_groups = 0
@@ -438,11 +293,11 @@ class RemoveFavoriteFileCommand(sublime_plugin.WindowCommand):
                     sublime.error_message("No favorites found! Try adding some.")
 
     def run(self):
-        if not load_favorite_files():
+        if not Favs.load(win_id=self.window.id()):
             # Present both files and groups for removal
-            self.files = FileList.all_files()
+            self.files = Favs.all_files()
             self.num_files = len(self.files)
-            self.groups = FileList.all_groups()
+            self.groups = Favs.all_groups()
             self.num_groups = len(self.groups)
 
             # Show panel
@@ -455,4 +310,11 @@ class RemoveFavoriteFileCommand(sublime_plugin.WindowCommand):
                 sublime.error_message("No favorites to remove!")
 
 
-load_favorite_files(True)
+class TogglePerProjectFavoritesCommand(sublime_plugin.WindowCommand):
+    def run(self):
+        # Toggle per pojects
+        win_id = self.window.id()
+        Favs.toggle_per_projects(win_id)
+
+    def is_enabled(self):
+        return sublime.load_settings("favorite_files.sublime-settings").get("enable_per_projects", False)

@@ -14,5 +14,9 @@
     {
         "caption": "Favorite Files: Clean Orphaned Favorites",
         "command": "clean_orphaned_favorites"
+    },
+    {
+        "caption": "Favorite Files: Toggle Per Project",
+        "command": "toggle_per_project_favorites"
     }
 ]
