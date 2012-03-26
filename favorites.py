@@ -7,6 +7,7 @@ import sublime
 from os.path import exists, basename, getmtime, join, normpath, splitext
 import json
 import sys
+import re
 
 lib = join(sublime.packages_path(), 'FavoriteFiles')
 if not lib in sys.path:
@@ -91,7 +92,7 @@ class FavProjects():
             pass
 
         # Throw out empty project names
-        if project == None or project == "" or not exists(project):
+        if project == None or re.match(".*\\.sublime-project", project) == None or not exists(project):
             project = None
 
         return project
