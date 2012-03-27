@@ -46,12 +46,17 @@ class FavProjects():
         return True if win_id != None and win_id in obj.projects else False
 
     @classmethod
-    def project_adjust(cls, obj, win_id):
+    def project_adjust(cls, obj, win_id, force=False):
         enabled = cls.is_project_tracked(obj, win_id)
         if enabled:
             project = cls.get_project(win_id)
             if project != None:
                 project_favs = splitext(project)[0] + "-favs.json"
+            if not exists(project_favs) and not force:
+                sublime.error_message('Cannot find favorite list!\nProject name probably changed.\nSwitching to global list.')
+                obj.projects.remove(win_id)
+                obj.file_name = obj.global_file
+                obj.last_access = 0
             # Make sure project is the new target
             if project_favs != obj.file_name:
                 obj.file_name = project_favs
@@ -177,15 +182,18 @@ class FavFileMgr():
         errors = False
 
         # Is project enabled
-        FavProjects.project_adjust(obj, win_id)
+        FavProjects.project_adjust(obj, win_id, force)
 
-        if not exists(obj.file_name) and force:
-            # Create file list if it doesn't exist
-            if cls.create_favorite_list(obj, {"version": 1, "files": [], "groups": {}}, force=True):
-                sublime.error_message('Failed to cerate %s!' % basename(obj.file_name))
-                errors = True
+        if not exists(obj.file_name):
+            if force:
+                # Create file list if it doesn't exist
+                if cls.create_favorite_list(obj, {"version": 1, "files": [], "groups": {}}, force=True):
+                    sublime.error_message('Failed to cerate %s!' % basename(obj.file_name))
+                    errors = True
+                else:
+                    force = True
             else:
-                force = True
+                errors = True
 
         # Only reload if file has been written since last access (or if forced reload)
         if not errors and (force or getmtime(obj.file_name) != obj.last_access):
