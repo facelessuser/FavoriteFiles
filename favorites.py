@@ -78,7 +78,8 @@ class FavProjects():
 
         try:
             with open(session, 'r') as f:
-                j = json.load(f)
+                # Tabs in strings messes things up for some reason
+                j = json.loads(f.read().replace('\t', ""))
                 for w in j['windows']:
                     if w['window_id'] == win_id:
                         if "workspace_name" in w:
@@ -163,7 +164,12 @@ class FavFileMgr():
             obj.files = file_list
         except:
             errors = True
-            sublime.error_message('Failed to load %s!' % basename(obj.file_name))
+            if cls.is_global_file():
+                sublime.error_message('Failed to load %s!' % basename(obj.file_name))
+            else:
+                sublime.error_message(
+                    'Failed to load %s!\nDid you rename your project?\nTry toggling "Per Projects" off and on and try again.' % basename(obj.file_name)
+                )
         return errors
 
     @classmethod
@@ -173,7 +179,7 @@ class FavFileMgr():
         # Is project enabled
         FavProjects.project_adjust(obj, win_id)
 
-        if not exists(obj.file_name):
+        if not exists(obj.file_name) and force:
             # Create file list if it doesn't exist
             if cls.create_favorite_list(obj, {"version": 1, "files": [], "groups": {}}, force=True):
                 sublime.error_message('Failed to cerate %s!' % basename(obj.file_name))
@@ -193,7 +199,10 @@ class Favorites():
         self.obj.global_file = global_file
         self.obj.last_access = 0
         self.obj.file_name = self.obj.global_file
-        FavFileMgr.load_favorite_files(self.obj, force=True)
+        self.open(self.obj)
+
+    def open(self, win_id=None):
+        return FavFileMgr.load_favorite_files(self.obj, force=True, win_id=win_id)
 
     def load(self, force=False, clean=False, win_id=None):
         return FavFileMgr.load_favorite_files(self.obj, force, clean, win_id)
@@ -201,7 +210,7 @@ class Favorites():
     def save(self, force=False):
         return FavFileMgr.create_favorite_list(self.obj, self.obj.files, force=force)
 
-    def toggle_per_projects(self, win_id):
+    def toggle_global(self, win_id):
         errors = False
         # Clean out closed windows
         FavProjects.prune_projects(self.obj)
@@ -209,10 +218,16 @@ class Favorites():
         if FavProjects.is_project_tracked(self.obj, win_id):
             self.obj.projects.remove(win_id)
         else:
-            if FavProjects.has_project(win_id):
-                self.obj.projects.add(win_id)
-            else:
-                errors = True
+            errors = True
+        return errors
+
+    def toggle_per_projects(self, win_id):
+        errors = False
+
+        if FavProjects.has_project(win_id):
+            self.obj.projects.add(win_id)
+        else:
+            errors = True
         return errors
 
     def remove_group(self, s):

@@ -20,7 +20,8 @@ class Refresh:
 class CleanOrphanedFavoritesCommand(sublime_plugin.WindowCommand):
     def run(self):
         # Clean out all dead links
-        Favs.load(force=True, clean=True, win_id=self.window.id())
+        if not Favs.load(clean=True, win_id=self.window.id()):
+            Favs.load(force=True, clean=True, win_id=self.window.id())
 
 
 class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
@@ -325,7 +326,7 @@ class FavoritesForceRefreshListenerCommand(sublime_plugin.EventListener):
                     if len(view.window().views()) > 1:
                         sublime.set_timeout(lambda: sublime.active_window().run_command("close_file"), 100)
                     # Attempt toggle again
-                    sublime.set_timeout(lambda: sublime.active_window().run_command("toggle_per_project_favorites"), 300)
+                    sublime.set_timeout(lambda: sublime.active_window().run_command("toggle_per_project_favorites"), 1000)
 
 
 class TogglePerProjectFavoritesCommand(sublime_plugin.WindowCommand):
@@ -338,20 +339,30 @@ class TogglePerProjectFavoritesCommand(sublime_plugin.WindowCommand):
 
     def run(self):
         refresh = True
+        win_id = self.window.id()
+
         if Refresh.on:
             Refresh.on = False
             refresh = False
-        # Toggle per pojects
-        win_id = self.window.id()
-        if Favs.toggle_per_projects(win_id):
-            if refresh:
-                view = self.window.open_file(Refresh.dummy_file)
-                if view != None:
-                    Refresh.on = True
-                    self.window.focus_view(view)
-                    sublime.set_timeout(lambda: self.save(view), 100)
+
+        # Try and toggle back to global first
+        if not Favs.toggle_global(win_id):
+            return
+
+        # Try and toggle per project
+        if refresh:
+            view = self.window.open_file(Refresh.dummy_file)
+            if view != None:
+                Refresh.on = True
+                self.window.focus_view(view)
+                sublime.set_timeout(lambda: self.save(view), 100)
             else:
                 sublime.error_message('Could not find a project file!')
+        else:
+            if Favs.toggle_per_projects(win_id):
+                sublime.error_message('Could not find a project file!')
+            else:
+                Favs.open(win_id=self.window.id())
 
     def is_enabled(self):
         return sublime.load_settings("favorite_files.sublime-settings").get("enable_per_projects", False)
