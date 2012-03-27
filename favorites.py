@@ -79,7 +79,7 @@ class FavProjects():
         try:
             with open(session, 'r') as f:
                 # Tabs in strings messes things up for some reason
-                j = json.loads(f.read().replace('\t', ""))
+                j = json.loads(f.read().replace('\t', " "))
                 for w in j['windows']:
                     if w['window_id'] == win_id:
                         if "workspace_name" in w:
