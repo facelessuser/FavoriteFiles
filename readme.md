@@ -13,6 +13,11 @@ Add the current opened file to your favorites.  An input panel will be opened so
 ## Favorite Files: Remove File
 Remove a favorite file form your list.
 
+## Favorite Files: Toggle Per Project (Disabled by Default)
+Enable ability for per project favorites.  Per projets must be toggled on for each project you are in.  You can toggle back and forth between per project and global favorites.
+
+This setting is disabled currently by default.  There is no easy way to detect the current project name reliably without forcing refreshing of the "Auto Save Session.sublime_session" file.  This causes me to have to pop up a refresh view.  I have not yet gotten much feedback on this, so until I do, I am disabling it by default.
+
 # License
 
 Favorite Files is released under the MIT license.
@@ -24,6 +29,11 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+# Version 0.6.0
+- Disable "Per Project Favorites" by default
+- Update documentation
+- Prep for official release
 
 # Version 0.5.3
 - Catch project rename when when opening or removing items from list (will only catch after a file has been saved).
