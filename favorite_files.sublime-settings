@@ -2,5 +2,5 @@
     // Enable ability for per project favorites .
     // Per Projets must be toggled on for each project you are in.
     // You can toggle back and forth between per project and global favorites.
-    "enable_per_projects": false
+    "enable_per_projects": true
 }
