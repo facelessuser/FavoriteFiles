@@ -17,7 +17,7 @@ from lib.file_strip.json import sanitize_json
 FAVORITE_LIST_VERSION = 1
 
 
-class FavObj:
+class FavObj(object):
     files = {}
     projects = set([])
     last_access = 0
@@ -25,7 +25,7 @@ class FavObj:
     file_name = ""
 
 
-class FavProjects():
+class FavProjects(object):
     @classmethod
     def add(cls, obj, win_id):
         obj.projects.add(win_id)
@@ -104,7 +104,7 @@ class FavProjects():
         return project
 
 
-class FavFileMgr():
+class FavFileMgr(object):
     @classmethod
     def is_global_file(cls, obj):
         return obj.file_name == obj.global_file
@@ -201,7 +201,7 @@ class FavFileMgr():
         return errors
 
 
-class Favorites():
+class Favorites(object):
     def __init__(self, global_file):
         self.obj = FavObj()
         self.obj.global_file = global_file
