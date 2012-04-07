@@ -23,7 +23,6 @@ comment_styles = {
 # Additional styles that use the same style as others
 comment_map = {
     "json": "c",  # Comments are not officially in the JSON spec, but if you strip them, you can use them
-    "trex": "c",
     "cpp": "c"
 }
 

@@ -8,7 +8,7 @@ import re
 import comments
 
 
-def strip_dangling_comments(text, save_newlines=False):
+def strip_dangling_commas(text, save_newlines=False):
     regex = re.compile(
         # ([1st group] dangling commas) | ([8th group] everything else)
         r"""((,([\s\r\n]*)(\]))|(,([\s\r\n]*)(\})))|("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|.[^,"']*)""",
@@ -42,4 +42,4 @@ def strip_comments(text, save_newlines):
 
 
 def sanitize_json(text, save_newlines=False):
-    return strip_dangling_comments(comments.strip_comments('json', text, save_newlines), save_newlines)
+    return strip_dangling_commas(comments.strip_comments('json', text, save_newlines), save_newlines)
