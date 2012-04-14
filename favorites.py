@@ -6,13 +6,12 @@ Copyright (c) 2012 Isaac Muse <isaacmuse@gmail.com>
 import sublime
 from os.path import exists, basename, getmtime, join, normpath, splitext
 import json
-import sys
 import re
 
-lib = join(sublime.packages_path(), 'FavoriteFiles')
-if not lib in sys.path:
-    sys.path.append(lib)
-from lib.file_strip.json import sanitize_json
+# lib = join(sublime.packages_path(), 'FavoriteFiles')
+# if not lib in sys.path:
+#     sys.path.append(lib)
+from FavoriteFilesLib.file_strip.json import sanitize_json
 
 FAVORITE_LIST_VERSION = 1
 
