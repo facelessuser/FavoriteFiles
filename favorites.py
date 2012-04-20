@@ -286,4 +286,15 @@ class Favorites(object):
 
     def all_groups(self):
         # Return all groups
-        return [["Group: " + k, "%d files" % len(v)] for k, v in self.obj.files["groups"].items()]
+        groups = []
+        for group in self.obj.files["groups"]:
+            groups.append(group)
+        
+        groups.sort()
+        
+        all_groups = []
+        for group in groups:
+            files = self.obj.files["groups"].get(group)
+            all_groups.append(["Group: " + group, "%d files" % len(files)])
+
+        return all_groups
