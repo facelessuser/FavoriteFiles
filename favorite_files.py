@@ -123,13 +123,14 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
             self.add(self.name, value)
         if repeat:
             # Ask again if name was not sufficient
-            self.window.show_input_panel(
+            v = self.window.show_input_panel(
                 "Create Group: ",
                 "New Group",
                 self.create_group,
                 None,
                 None
             )
+            v.run_command("select_all")
 
     def select_group(self, value, replace=False):
         if value >= 0:
@@ -155,13 +156,14 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
                 self.add(self.name)
             elif value == 1:
                 # Request new group name
-                self.window.show_input_panel(
+                v = self.window.show_input_panel(
                     "Create Group: ",
                     "New Group",
                     self.create_group,
                     None,
                     None
                 )
+                v.run_command("select_all")
             elif value == 2:
                 # "Add to Group"
                 self.show_groups()
