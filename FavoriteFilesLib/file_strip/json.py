@@ -33,8 +33,8 @@ def strip_dangling_commas(text, preserve_lines=False):
     )
 
 
-def strip_comments(text, save_newlines):
-    return strip_comments('json', text, save_newlines)
+def strip_comments(text, preserve_lines=False):
+    return Comments('json', preserve_lines).strip(text)
 
 
 def sanitize_json(text, preserve_lines=False):
