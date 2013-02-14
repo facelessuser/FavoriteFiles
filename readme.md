@@ -16,8 +16,6 @@ Remove a favorite file form your list.
 ## Favorite Files: Toggle Per Project
 Allows saving per project favorites. Per projets must be toggled on for each project you are in.  You can toggle back and forth between per project and global favorites.
 
-There is no easy way to detect the current project name reliably without forcing refreshing of the "Auto Save Session.sublime_session" file.  This causes me to have to pop up a refresh view.
-
 # License
 
 Favorite Files is released under the MIT license.
