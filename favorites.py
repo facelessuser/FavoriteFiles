@@ -1,17 +1,15 @@
-'''
+"""
 Favorite Files
 Licensed under MIT
 Copyright (c) 2012 Isaac Muse <isaacmuse@gmail.com>
-'''
+"""
+
 import sublime
 from os.path import exists, basename, getmtime, join, normpath, splitext
 import json
 import re
 
-# lib = join(sublime.packages_path(), 'FavoriteFiles')
-# if not lib in sys.path:
-#     sys.path.append(lib)
-from FavoriteFilesLib.file_strip.json import sanitize_json
+from FavoriteFiles.FavoriteFilesLib.file_strip.json import sanitize_json
 
 FAVORITE_LIST_VERSION = 1
 
@@ -73,32 +71,11 @@ class FavProjects(object):
     @classmethod
     def get_project(cls, win_id):
         project = None
-        reg_session = join(sublime.packages_path(), "..", "Settings", "Session.sublime_session")
-        auto_save = join(sublime.packages_path(), "..", "Settings", "Auto Save Session.sublime_session")
-        session = auto_save if exists(auto_save) else reg_session
 
-        if not exists(session) or win_id == None:
-            return project
-
-        try:
-            with open(session, 'r') as f:
-                # Tabs in strings messes things up for some reason
-                j = json.JSONDecoder(strict=False).decode(f.read())
-                for w in j['windows']:
-                    if w['window_id'] == win_id:
-                        if "workspace_name" in w:
-                            if sublime.platform() == "windows":
-                                # Account for windows specific formatting
-                                project = normpath(w["workspace_name"].lstrip("/").replace("/", ":/", 1))
-                            else:
-                                project = w["workspace_name"]
-                            break
-        except:
-            pass
-
-        # Throw out empty project names
-        if project == None or re.match(".*\\.sublime-project", project) == None or not exists(project):
-            project = None
+        for w in sublime.windows():
+            if w.id() == win_id:
+                project = w.project_file_name()
+                break
 
         return project
 

@@ -1,8 +1,8 @@
-'''
+"""
 Favorite Files
 Licensed under MIT
 Copyright (c) 2012 Isaac Muse <isaacmuse@gmail.com>
-'''
+"""
 
 import re
 
