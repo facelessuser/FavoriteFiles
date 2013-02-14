@@ -23,9 +23,13 @@ class QuickPanelMgr(object):
 
     @classmethod
     def reset(cls):
-        cls.ignore = False
-        if cls.lamb is not None:
-            sublime.set_timeout(cls.lamb, 0)
+        reset = False
+        if cls.ignore:
+            reset = True
+            cls.ignore = False
+            if cls.lamb is not None:
+                sublime.set_timeout(cls.lamb, 0)
+        return reset
 
 
 class CleanOrphanedFavoritesCommand(sublime_plugin.WindowCommand):
@@ -37,8 +41,7 @@ class CleanOrphanedFavoritesCommand(sublime_plugin.WindowCommand):
 
 class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
     def open_file(self, value, group=False):
-        if QuickPanelMgr.ignore:
-            QuickPanelMgr.reset()
+        if QuickPanelMgr.reset():
             return
 
         if value >= 0:
@@ -79,7 +82,6 @@ class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
 
                 # Show files in group
                 if self.num_files:
-                    test = lambda x: self.open_file(x, group=True)
                     QuickPanelMgr.close_qp(
                         self.window,
                         lambda: self.window.show_quick_panel(
@@ -127,8 +129,7 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
             sublime.error_message(message)
 
     def create_group(self, value):
-        if QuickPanelMgr.ignore:
-            QuickPanelMgr.reset()
+        if QuickPanelMgr.reset():
             return
 
         repeat = False
@@ -156,8 +157,7 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
             v.run_command("select_all")
 
     def select_group(self, value, replace=False):
-        if QuickPanelMgr.ignore:
-            QuickPanelMgr.reset()
+        if QuickPanelMgr.reset():
             return
 
         if value >= 0:
@@ -180,8 +180,7 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
         )
 
     def group_answer(self, value):
-        if QuickPanelMgr.ignore:
-            QuickPanelMgr.reset()
+        if QuickPanelMgr.reset():
             return
 
         if value >= 0:
@@ -223,8 +222,7 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
             )
 
     def file_answer(self, value):
-        if QuickPanelMgr.ignore:
-            QuickPanelMgr.reset()
+        if QuickPanelMgr.reset():
             return
 
         if value >= 0:
@@ -303,8 +301,7 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
 
 class RemoveFavoriteFileCommand(sublime_plugin.WindowCommand):
     def remove(self, value, group=False, group_name=None):
-        if QuickPanelMgr.ignore:
-            QuickPanelMgr.reset()
+        if QuickPanelMgr.reset():
             return
 
         if value >= 0:
