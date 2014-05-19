@@ -5,9 +5,8 @@ Copyright (c) 2012 Isaac Muse <isaacmuse@gmail.com>
 """
 
 import sublime
-from os.path import exists, basename, getmtime, join, normpath, splitext
+from os.path import exists, basename, getmtime, splitext
 import json
-import re
 
 from FavoriteFiles.FavoriteFilesLib.file_strip.json import sanitize_json
 
@@ -40,14 +39,14 @@ class FavProjects(object):
 
     @classmethod
     def is_project_tracked(cls, obj, win_id):
-        return True if win_id != None and win_id in obj.projects else False
+        return True if win_id is not None and win_id in obj.projects else False
 
     @classmethod
     def project_adjust(cls, obj, win_id, force=False):
         enabled = cls.is_project_tracked(obj, win_id)
         if enabled:
             project = cls.get_project(win_id)
-            if project != None:
+            if project is not None:
                 project_favs = splitext(project)[0] + "-favs.json"
             if not exists(project_favs) and not force:
                 sublime.error_message('Cannot find favorite list!\nProject name probably changed.\nSwitching to global list.')
@@ -66,7 +65,7 @@ class FavProjects(object):
     @classmethod
     def has_project(cls, win_id):
         project = cls.get_project(win_id)
-        return True if project != None else False
+        return True if project is not None else False
 
     @classmethod
     def get_project(cls, win_id):
@@ -131,7 +130,7 @@ class FavFileMgr(object):
 
             # TODO: remove this when enough time passes
             # Update version format
-            if not "version" in file_list or file_list["version"] < FAVORITE_LIST_VERSION:
+            if "version" not in file_list or file_list["version"] < FAVORITE_LIST_VERSION:
                 cls.update_list_format(file_list)
                 cls.create_favorite_list(obj, file_list, force=True)
 
@@ -225,7 +224,7 @@ class Favorites(object):
 
     def set(self, s, group_name=None):
         # Add file in global or group list
-        if group_name == None:
+        if group_name is None:
             self.obj.files["files"].append(s)
         else:
             self.obj.files["groups"][group_name].append(s)
@@ -236,14 +235,14 @@ class Favorites(object):
             return True if s in self.obj.files["groups"] else False
         else:
             # See if file in global or group list exists
-            if group_name == None:
+            if group_name is None:
                 return True if s in set(self.obj.files["files"]) else False
             else:
                 return True if s in set(self.obj.files["groups"][group_name]) else False
 
     def remove(self, s, group_name=None):
         # Remove file in group or global list
-        if group_name == None:
+        if group_name is None:
             if self.exists(s):
                 self.obj.files["files"].remove(s)
         else:
@@ -252,7 +251,7 @@ class Favorites(object):
 
     def all_files(self, group_name=None):
         # Return all files in group or global list
-        if group_name != None:
+        if group_name is not None:
             return [[basename(path), path] for path in self.obj.files["groups"][group_name]]
         else:
             return [[basename(path), path] for path in self.obj.files["files"]]

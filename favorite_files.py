@@ -6,8 +6,11 @@ Copyright (c) 2012 Isaac Muse <isaacmuse@gmail.com>
 
 import sublime
 import sublime_plugin
-from os.path import join, exists, normpath
+from os.path import join, exists
 from FavoriteFiles.favorites import Favorites
+
+Favs = None
+
 
 class QuickPanelMgr(object):
     ignore = False
@@ -65,7 +68,7 @@ class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
                 for n in names:
                     if exists(n):
                         view = self.window.open_file(n)
-                        if view != None:
+                        if view is not None:
                             if active_group >= 0:
                                 self.window.set_view_index(view, active_group, count)
                             count += 1
@@ -227,11 +230,11 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
 
         if value >= 0:
             view = self.window.active_view()
-            if view != None:
+            if view is not None:
                 if value == 0:
                     # Single file
                     name = view.file_name()
-                    if name != None:
+                    if name is not None:
                         self.name.append(name)
                         self.group_prompt()
                 if value == 1:
@@ -240,7 +243,7 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
                     if len(views) > 0:
                         for v in views:
                             name = v.file_name()
-                            if name != None:
+                            if name is not None:
                                 self.name.append(name)
                     if len(self.name) > 0:
                         self.group_prompt()
@@ -251,7 +254,7 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
                     if len(views) > 0:
                         for v in views:
                             name = v.file_name()
-                            if name != None:
+                            if name is not None:
                                 self.name.append(name)
                     if len(self.name) > 0:
                         self.group_prompt()
@@ -276,7 +279,7 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
         view = self.window.active_view()
         self.name = []
 
-        if view != None:
+        if view is not None:
             view_code = 0
             views = self.window.views()
 
@@ -294,7 +297,7 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
             else:
                 # Only single file open, proceed without file options
                 name = view.file_name()
-                if name != None:
+                if name is not None:
                     self.name.append(name)
                     self.group_prompt(True)
 
@@ -309,7 +312,7 @@ class RemoveFavoriteFileCommand(sublime_plugin.WindowCommand):
             if value < self.num_files or (group and value < self.num_files + 1):
                 name = None
                 if group:
-                    if group_name == None:
+                    if group_name is None:
                         return
                     if value == 0:
                         # Remove group
