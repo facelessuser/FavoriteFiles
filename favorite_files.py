@@ -8,6 +8,7 @@ import sublime
 import sublime_plugin
 from os.path import join, exists
 from FavoriteFiles.favorites import Favorites
+from FavoriteFiles.lib.notify import error
 
 Favs = None
 
@@ -74,7 +75,7 @@ class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
                             count += 1
 
                     else:
-                        sublime.error_message("The following file does not exist:\n%s" % n)
+                        error("The following file does not exist:\n%s" % n)
             else:
                 # Decend into group
                 value -= self.num_files
@@ -93,7 +94,7 @@ class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
                         )
                     )
                 else:
-                    sublime.error_message("No favorites found! Try adding some.")
+                    error("No favorites found! Try adding some.")
 
     def run(self):
         if not Favs.load(win_id=self.window.id()):
@@ -107,7 +108,7 @@ class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
                     self.open_file
                 )
             else:
-                sublime.error_message("No favorites found! Try adding some.")
+                error("No favorites found! Try adding some.")
 
 
 class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
@@ -129,7 +130,7 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
         if disk_omit_count:
             # Alert that files could be added
             message = "1 file does not exist on disk!" if disk_omit_count == 1 else "%d file(s) do not exist on disk!" % disk_omit_count
-            sublime.error_message(message)
+            error(message)
 
     def create_group(self, value):
         if QuickPanelMgr.reset():
@@ -138,11 +139,11 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
         repeat = False
         if value == "":
             # Require an actual name
-            sublime.error_message("Please provide a valid group name.")
+            error("Please provide a valid group name.")
             repeat = True
         elif Favs.exists(value, group=True):
             # Do not allow duplicates
-            sublime.error_message("Group \"%s\" already exists.")
+            error("Group \"%s\" already exists.")
             repeat = True
         else:
             # Add group
@@ -347,7 +348,7 @@ class RemoveFavoriteFileCommand(sublime_plugin.WindowCommand):
                         )
                     )
                 else:
-                    sublime.error_message("No favorites found! Try adding some.")
+                    error("No favorites found! Try adding some.")
 
     def run(self):
         if not Favs.load(win_id=self.window.id()):
@@ -364,7 +365,7 @@ class RemoveFavoriteFileCommand(sublime_plugin.WindowCommand):
                     self.remove
                 )
             else:
-                sublime.error_message("No favorites to remove!")
+                error("No favorites to remove!")
 
 
 class TogglePerProjectFavoritesCommand(sublime_plugin.WindowCommand):
@@ -377,7 +378,7 @@ class TogglePerProjectFavoritesCommand(sublime_plugin.WindowCommand):
 
         # Try and toggle per project
         if Favs.toggle_per_projects(win_id):
-            sublime.error_message('Could not find a project file!')
+            error('Could not find a project file!')
         else:
             Favs.open(win_id=self.window.id())
 

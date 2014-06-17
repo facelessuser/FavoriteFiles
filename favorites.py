@@ -8,7 +8,8 @@ import sublime
 from os.path import exists, basename, getmtime, splitext
 import json
 
-from FavoriteFiles.FavoriteFilesLib.file_strip.json import sanitize_json
+from FavoriteFiles.lib.file_strip.json import sanitize_json
+from FavoriteFiles.lib.notify import error
 
 FAVORITE_LIST_VERSION = 1
 
@@ -49,7 +50,7 @@ class FavProjects(object):
             if project is not None:
                 project_favs = splitext(project)[0] + "-favs.json"
             if not exists(project_favs) and not force:
-                sublime.error_message('Cannot find favorite list!\nProject name probably changed.\nSwitching to global list.')
+                error('Cannot find favorite list!\nProject name probably changed.\nSwitching to global list.')
                 obj.projects.remove(win_id)
                 obj.file_name = obj.global_file
                 obj.last_access = 0
@@ -115,7 +116,7 @@ class FavFileMgr(object):
                     f.write(j + "\n")
                 obj.last_access = getmtime(obj.file_name)
             except:
-                sublime.error_message('Failed to write %s!' % basename(obj.file_name))
+                error('Failed to write %s!' % basename(obj.file_name))
                 errors = True
         return errors
 
@@ -145,9 +146,9 @@ class FavFileMgr(object):
         except:
             errors = True
             if cls.is_global_file():
-                sublime.error_message('Failed to load %s!' % basename(obj.file_name))
+                error('Failed to load %s!' % basename(obj.file_name))
             else:
-                sublime.error_message(
+                error(
                     'Failed to load %s!\nDid you rename your project?\nTry toggling "Per Projects" off and on and try again.' % basename(obj.file_name)
                 )
         return errors
@@ -163,7 +164,7 @@ class FavFileMgr(object):
             if force:
                 # Create file list if it doesn't exist
                 if cls.create_favorite_list(obj, {"version": 1, "files": [], "groups": {}}, force=True):
-                    sublime.error_message('Failed to cerate %s!' % basename(obj.file_name))
+                    error('Failed to cerate %s!' % basename(obj.file_name))
                     errors = True
                 else:
                     force = True
