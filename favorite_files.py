@@ -66,16 +66,24 @@ class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
 
                 # Iterate through file list ensure they load in proper view index order
                 count = 0
+                focus_view = None
                 for n in names:
                     if exists(n):
                         view = self.window.open_file(n)
                         if view is not None:
+                            focus_view = view
                             if active_group >= 0:
                                 self.window.set_view_index(view, active_group, count)
                             count += 1
-
                     else:
                         error("The following file does not exist:\n%s" % n)
+                if focus_view is not None:
+                    # Horrible ugly hack to ensure opened file gets focus
+                    def fn(v):
+                        self.window.focus_view(focus_view)
+                        self.window.show_quick_panel(["None"], None)
+                        self.window.run_command("hide_overlay")
+                    sublime.set_timeout(lambda: fn(focus_view), 500)
             else:
                 # Decend into group
                 value -= self.num_files
