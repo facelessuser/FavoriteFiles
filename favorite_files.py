@@ -13,29 +13,6 @@ from FavoriteFiles.lib.notify import error
 Favs = None
 
 
-class QuickPanelMgr(object):
-    ignore = False
-    lamb = None
-
-    @classmethod
-    def close_qp(cls, window, lamb=None):
-        cls.ignore = True
-        cls.lamb = None
-        if lamb is not None:
-            cls.lamb = lamb
-        window.run_command("hide_overlay")
-
-    @classmethod
-    def reset(cls):
-        reset = False
-        if cls.ignore:
-            reset = True
-            cls.ignore = False
-            if cls.lamb is not None:
-                sublime.set_timeout(cls.lamb, 0)
-        return reset
-
-
 class CleanOrphanedFavoritesCommand(sublime_plugin.WindowCommand):
     def run(self):
         # Clean out all dead links
@@ -45,9 +22,6 @@ class CleanOrphanedFavoritesCommand(sublime_plugin.WindowCommand):
 
 class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
     def open_file(self, value, group=False):
-        if QuickPanelMgr.reset():
-            return
-
         if value >= 0:
             active_group = self.window.active_group()
             if value < self.num_files or (group and value < self.num_files + 1):
@@ -94,12 +68,9 @@ class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
 
                 # Show files in group
                 if self.num_files:
-                    QuickPanelMgr.close_qp(
-                        self.window,
-                        lambda: self.window.show_quick_panel(
-                            [["Open Group", ""]] + self.files,
-                            lambda x: self.open_file(x, group=True)
-                        )
+                    self.window.show_quick_panel(
+                        [["Open Group", ""]] + self.files,
+                        lambda x: self.open_file(x, group=True)
                     )
                 else:
                     error("No favorites found! Try adding some.")
@@ -141,9 +112,6 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
             error(message)
 
     def create_group(self, value):
-        if QuickPanelMgr.reset():
-            return
-
         repeat = False
         if value == "":
             # Require an actual name
@@ -169,9 +137,6 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
             v.run_command("select_all")
 
     def select_group(self, value, replace=False):
-        if QuickPanelMgr.reset():
-            return
-
         if value >= 0:
             group_name = self.groups[value][0].replace("Group: ", "", 1)
             if replace:
@@ -183,19 +148,14 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
     def show_groups(self, replace=False):
         # Show availabe groups
         self.groups = Favs.all_groups()
-        QuickPanelMgr.close_qp(
-            self.window,
-            lambda: self.window.show_quick_panel(
-                self.groups,
-                lambda x: self.select_group(x, replace=replace)
-            )
+        self.window.show_quick_panel(
+            self.groups,
+            lambda x: self.select_group(x, replace=replace)
         )
 
     def group_answer(self, value):
-        if QuickPanelMgr.reset():
-            return
-
         if value >= 0:
+            print("here")
             if value == 0:
                 # No group; add file to favorites
                 self.add(self.name)
@@ -223,20 +183,12 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
             # Options if groups already exit
             self.group += ["Add to Group", "Replace Group"]
 
-        # Present group options
-        if not first:
-            QuickPanelMgr.close_qp(
-                self.window,
-                lambda: self.window.show_quick_panel(
-                    self.group,
-                    self.group_answer
-                )
-            )
+        self.window.show_quick_panel(
+            self.group,
+            self.group_answer
+        )
 
     def file_answer(self, value):
-        if QuickPanelMgr.reset():
-            return
-
         if value >= 0:
             view = self.window.active_view()
             if view is not None:
@@ -313,9 +265,6 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
 
 class RemoveFavoriteFileCommand(sublime_plugin.WindowCommand):
     def remove(self, value, group=False, group_name=None):
-        if QuickPanelMgr.reset():
-            return
-
         if value >= 0:
             # Remove file from global, file from group list, or entire group
             if value < self.num_files or (group and value < self.num_files + 1):
@@ -348,12 +297,9 @@ class RemoveFavoriteFileCommand(sublime_plugin.WindowCommand):
                 self.num_groups = 0
                 # Show group files
                 if self.num_files:
-                    QuickPanelMgr.close_qp(
-                        self.window,
-                        lambda: self.window.show_quick_panel(
-                            [["Remove Group", ""]] + self.files,
-                            lambda x: self.remove(x, group=True, group_name=group_name)
-                        )
+                    self.window.show_quick_panel(
+                        [["Remove Group", ""]] + self.files,
+                        lambda x: self.remove(x, group=True, group_name=group_name)
                     )
                 else:
                     error("No favorites found! Try adding some.")
