@@ -155,7 +155,6 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
 
     def group_answer(self, value):
         if value >= 0:
-            print("here")
             if value == 0:
                 # No group; add file to favorites
                 self.add(self.name)
