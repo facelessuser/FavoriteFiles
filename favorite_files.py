@@ -340,6 +340,14 @@ class TogglePerProjectFavoritesCommand(sublime_plugin.WindowCommand):
         return sublime.load_settings("favorite_files.sublime-settings").get("enable_per_projects", False)
 
 
+def check_st_version():
+    if int(sublime.version()) < 3080:
+        window = sublime.active_window()
+        if window is not None:
+            window.run_command('open_file', {"file": "${packages}/FavoriteFiles/messages/upgrade-st-3080.md"})
+
+
 def plugin_loaded():
     global Favs
     Favs = Favorites(join(sublime.packages_path(), 'User', 'favorite_files_list.json'))
+    check_st_version()
