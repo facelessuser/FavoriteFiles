@@ -1,0 +1,26 @@
+site_name: FavoriteFiles Documentation
+repo_url: https://github.com/facelessuser/FavoriteFiles
+site_description: Sublime Text plugin for saving and accessing favorite files.
+copyright: Copyright &copy; 2011 - 2015 <a href="https://github.com/facelessuser">Isaac Muse</a>
+pages:
+- ['index.md', 'Home']
+- ['license.md', 'License']
+theme: readthedocs
+theme_dir: doc_theme
+markdown_extensions:
+- markdown.extensions.extra
+- markdown.extensions.admonition
+- markdown.extensions.smarty
+- markdown.extensions.nl2br
+- markdown.extensions.codehilite
+- pymdownx.inlinehilite
+- pymdownx.magiclink
+- pymdownx.betterem
+- pymdownx.tilde
+- pymdownx.caret
+- pymdownx.smartsymbols
+- pymdownx.githubemoji
+- pymdownx.tasklist
+- pymdownx.superfences
+- pymdownx.progressbar
+- pymdownx.headeranchor
