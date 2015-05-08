@@ -1,0 +1,21 @@
+[
+{
+	"id" : "favorite",
+	"caption": "favorite Files",
+	"children":
+	[
+	{
+		"caption" : "Add to Favorite Files",
+		"command" : "add_favorite_file"
+	},
+	{
+		"caption" : "Open Favorite File(s)",
+		"command" : "select_favorite_file"
+	},
+	{
+		"caption" : "Remove Favorite File(s)",
+		"command" : "remove_favorite_file"
+	}
+	]
+}
+]
