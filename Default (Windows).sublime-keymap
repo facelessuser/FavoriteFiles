@@ -1,0 +1,5 @@
+[
+	{ "keys": ["ctrl+alt+a"], "command": "add_favorite_file" },
+	{ "keys": ["ctrl+alt+s"], "command": "select_favorite_file" },
+	{ "keys": ["ctrl+alt+r"], "command": "remove_favorite_file" }
+]
