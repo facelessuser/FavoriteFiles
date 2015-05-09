@@ -1,11 +1,16 @@
 # FavoriteFiles {: .doctitle}
 Access your favorite files.
-{: .doctitle-info}
 
 ---
 
 # Overview
 This is a simple plugin to save favorite files that are not part of a project.  It supports adding and removing favorites and open favorite files.
+
+# Features
+
+- Add/remove/open file(s) in favorites
+- Optionally store files in groups and open entire groups
+- Toggle project specific favorites
 
 # Usage
 All commands are accessible via the command palette.
