@@ -8,7 +8,7 @@ import sublime
 try:
     from SubNotify.sub_notify import SubNotifyIsReadyCommand as Notify
 except Exception:
-    class Notify:
+    class Notify(object):
 
         """Notify fallback class."""
 
