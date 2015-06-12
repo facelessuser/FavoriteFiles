@@ -1,7 +1,8 @@
 """
-Favorite Files
+Favorite Files.
+
 Licensed under MIT
-Copyright (c) 2012 Isaac Muse <isaacmuse@gmail.com>
+Copyright (c) 2012 - 2015 Isaac Muse <isaacmuse@gmail.com>
 """
 
 import sublime
@@ -14,18 +15,28 @@ Favs = None
 
 
 class CleanOrphanedFavoritesCommand(sublime_plugin.WindowCommand):
+
+    """Clean out favorties that no longer exist."""
+
     def run(self):
+        """Run the command."""
+
         # Clean out all dead links
         if not Favs.load(clean=True, win_id=self.window.id()):
             Favs.load(force=True, clean=True, win_id=self.window.id())
 
 
 class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
+
+    """Open the selected favorite(s)."""
+
     def open_file(self, value, group=False):
+        """Open the file(s)."""
+
         if value >= 0:
             active_group = self.window.active_group()
             if value < self.num_files or (group and value < self.num_files + 1):
-                # Open global file, file in group, or all fiels in group
+                # Open global file, file in group, or all files in group
                 names = []
                 if group:
                     if value == 0:
@@ -53,7 +64,8 @@ class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
                         error("The following file does not exist:\n%s" % n)
                 if focus_view is not None:
                     # Horrible ugly hack to ensure opened file gets focus
-                    def fn(v):
+                    def fn(focus_view):
+                        """Ensure focus of view."""
                         self.window.focus_view(focus_view)
                         self.window.show_quick_panel(["None"], None)
                         self.window.run_command("hide_overlay")
@@ -76,6 +88,8 @@ class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
                     error("No favorites found! Try adding some.")
 
     def run(self):
+        """Run the command."""
+
         if not Favs.load(win_id=self.window.id()):
             self.files = Favs.all_files()
             self.num_files = len(self.files)
@@ -91,7 +105,12 @@ class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
 
 
 class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
+
+    """Add favorite(s) to the global group or the specified group."""
+
     def add(self, names, group_name=None):
+        """Add favorites."""
+
         disk_omit_count = 0
         added = 0
         # Iterate names and add them to group/global if not already added
@@ -108,10 +127,15 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
             Favs.save(True)
         if disk_omit_count:
             # Alert that files could be added
-            message = "1 file does not exist on disk!" if disk_omit_count == 1 else "%d file(s) do not exist on disk!" % disk_omit_count
+            if disk_omit_count == 1:
+                message = "1 file does not exist on disk!"
+            else:
+                message = "%d file(s) do not exist on disk!" % disk_omit_count
             error(message)
 
     def create_group(self, value):
+        """Create the specified group."""
+
         repeat = False
         if value == "":
             # Require an actual name
@@ -137,6 +161,8 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
             v.run_command("select_all")
 
     def select_group(self, value, replace=False):
+        """Add favorite to the group."""
+
         if value >= 0:
             group_name = self.groups[value][0].replace("Group: ", "", 1)
             if replace:
@@ -146,6 +172,8 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
             self.add(self.name, group_name)
 
     def show_groups(self, replace=False):
+        """Prompt user with stored groups."""
+
         # Show availabe groups
         self.groups = Favs.all_groups()
         self.window.show_quick_panel(
@@ -154,6 +182,8 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
         )
 
     def group_answer(self, value):
+        """Handle the user's 'group' options answer."""
+
         if value >= 0:
             if value == 0:
                 # No group; add file to favorites
@@ -175,7 +205,9 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
                 # "Replace Group"
                 self.show_groups(replace=True)
 
-    def group_prompt(self, first=False):
+    def group_prompt(self):
+        """Prompt user with 'group' options."""
+
         # Default options
         self.group = ["No Group", "Create Group"]
         if Favs.group_count() > 0:
@@ -188,6 +220,8 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
         )
 
     def file_answer(self, value):
+        """Handle the user's 'add' option selection."""
+
         if value >= 0:
             view = self.window.active_view()
             if view is not None:
@@ -209,7 +243,7 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
                         self.group_prompt()
                 if value == 2:
                     # All files in layout group
-                    group, idx = self.window.get_view_index(view)
+                    group = self.window.get_view_index(view)[0]
                     views = self.window.views_in_group(group)
                     if len(views) > 0:
                         for v in views:
@@ -220,6 +254,8 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
                         self.group_prompt()
 
     def file_prompt(self, view_code):
+        """Prompt the user for 'add' options."""
+
         # Add current active file
         options = ["Add Current File to Favorites"]
         if view_code > 0:
@@ -236,6 +272,8 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
         )
 
     def run(self):
+        """Run the command."""
+
         view = self.window.active_view()
         self.name = []
 
@@ -249,7 +287,7 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
                 view_code = 1
                 # See if there is more than one group; if so allow saving of a specific group
                 if self.window.num_groups() > 1:
-                    group, idx = self.window.get_view_index(view)
+                    group = self.window.get_view_index(view)[0]
                     group_views = self.window.views_in_group(group)
                     if len(group_views) > 1:
                         view_code = 2
@@ -259,11 +297,16 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
                 name = view.file_name()
                 if name is not None:
                     self.name.append(name)
-                    self.group_prompt(True)
+                    self.group_prompt()
 
 
 class RemoveFavoriteFileCommand(sublime_plugin.WindowCommand):
+
+    """Remove the file favorites from the tracked list."""
+
     def remove(self, value, group=False, group_name=None):
+        """Remove the favorite(s)."""
+
         if value >= 0:
             # Remove file from global, file from group list, or entire group
             if value < self.num_files or (group and value < self.num_files + 1):
@@ -304,6 +347,8 @@ class RemoveFavoriteFileCommand(sublime_plugin.WindowCommand):
                     error("No favorites found! Try adding some.")
 
     def run(self):
+        """Run the command."""
+
         if not Favs.load(win_id=self.window.id()):
             # Present both files and groups for removal
             self.files = Favs.all_files()
@@ -322,7 +367,11 @@ class RemoveFavoriteFileCommand(sublime_plugin.WindowCommand):
 
 
 class TogglePerProjectFavoritesCommand(sublime_plugin.WindowCommand):
+
+    """Toggle per project favorites."""
+
     def run(self):
+        """Run the command."""
         win_id = self.window.id()
 
         # Try and toggle back to global first
@@ -336,10 +385,14 @@ class TogglePerProjectFavoritesCommand(sublime_plugin.WindowCommand):
             Favs.open(win_id=self.window.id())
 
     def is_enabled(self):
+        """Check if command is enabled."""
+
         return sublime.load_settings("favorite_files.sublime-settings").get("enable_per_projects", False)
 
 
 def check_st_version():
+    """Check the Sublime version."""
+
     if int(sublime.version()) < 3080:
         window = sublime.active_window()
         if window is not None:
@@ -347,6 +400,8 @@ def check_st_version():
 
 
 def plugin_loaded():
+    """Setup plugin."""
+
     global Favs
     Favs = Favorites(join(sublime.packages_path(), 'User', 'favorite_files_list.json'))
     check_st_version()
