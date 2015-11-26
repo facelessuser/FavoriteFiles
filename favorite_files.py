@@ -15,7 +15,6 @@ Favs = None
 
 
 class CleanOrphanedFavoritesCommand(sublime_plugin.WindowCommand):
-
     """Clean out favorties that no longer exist."""
 
     def run(self):
@@ -27,7 +26,6 @@ class CleanOrphanedFavoritesCommand(sublime_plugin.WindowCommand):
 
 
 class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
-
     """Open the selected favorite(s)."""
 
     def open_file(self, value, group=False):
@@ -105,7 +103,6 @@ class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
 
 
 class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
-
     """Add favorite(s) to the global group or the specified group."""
 
     def add(self, names, group_name=None):
@@ -301,7 +298,6 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
 
 
 class RemoveFavoriteFileCommand(sublime_plugin.WindowCommand):
-
     """Remove the file favorites from the tracked list."""
 
     def remove(self, value, group=False, group_name=None):
@@ -367,7 +363,6 @@ class RemoveFavoriteFileCommand(sublime_plugin.WindowCommand):
 
 
 class TogglePerProjectFavoritesCommand(sublime_plugin.WindowCommand):
-
     """Toggle per project favorites."""
 
     def run(self):

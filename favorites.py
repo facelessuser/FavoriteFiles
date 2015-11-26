@@ -16,7 +16,6 @@ FAVORITE_LIST_VERSION = 1
 
 
 class FavObj(object):
-
     """Favorite object for tracking current state."""
 
     files = {}
@@ -27,7 +26,6 @@ class FavObj(object):
 
 
 class FavProjects(object):
-
     """Project related actions."""
 
     @classmethod
@@ -102,7 +100,6 @@ class FavProjects(object):
 
 
 class FavFileMgr(object):
-
     """Handle file actions."""
 
     @classmethod
@@ -200,7 +197,6 @@ class FavFileMgr(object):
 
 
 class Favorites(object):
-
     """High level favorites handling."""
 
     def __init__(self, global_file):
