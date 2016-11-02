@@ -183,7 +183,7 @@ class FavFileMgr(object):
             if force:
                 # Create file list if it doesn't exist
                 if cls.create_favorite_list(obj, {"version": 1, "files": [], "groups": {}}, force=True):
-                    error('Failed to cerate %s!' % basename(obj.file_name))
+                    error('Failed to create %s!' % basename(obj.file_name))
                     errors = True
                 else:
                     force = True
