@@ -140,7 +140,7 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
             repeat = True
         elif Favs.exists(value, group=True):
             # Do not allow duplicates
-            error("Group \"%s\" already exists.")
+            error("Group \"%s\" already exists." % value)
             repeat = True
         else:
             # Add group
