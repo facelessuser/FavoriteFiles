@@ -1,7 +1,13 @@
-# User Guide {: .doctitle}
-Configuring and using FavoriteFiles.
+# User Guide
 
----
+## Overview
+This is a simple plugin that was originally created to save favorite files that are not part of a project.  It can also be used to save and load groups of files which may be useful even for files part of a project.
+
+Current features:
+
+- Add/remove/open file(s) in favorites.
+- Optionally store files in groups and open entire groups.
+- Toggle project specific favorites.
 
 ## Commands
 All commands are accessible via the command palette.
@@ -38,9 +44,11 @@ Enables the per project toggling ability.  For more info, see: [Favorite Files: 
 ```
 
 ### use_sub_notify
-Enables use of [SubNotify](https://github.com/facelessuser/SubNotify) notifications.
+Enables use of [SubNotify][subnotify] notifications.
 
 ```js
     // Use subnotify if available
     "use_sub_notify": true
 ```
+
+--8<-- "refs.md"

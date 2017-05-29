@@ -266,7 +266,7 @@ class Favorites(object):
             self.obj.files["groups"][group_name].append(s)
 
     def exists(self, s, group=False, group_name=None):
-        """Check if froup or file exists."""
+        """Check if group or file exists."""
 
         if group:
             # See if group exists
