@@ -5,5 +5,8 @@
     "enable_per_projects": true,
 
     // Use subnotify if available
-    "use_sub_notify": true
+    "use_sub_notify": true,
+
+    // set to false to disable auto-align while managing favorites
+    "manager_auto_align_as_you_type": true
 }
