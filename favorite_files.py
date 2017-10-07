@@ -403,4 +403,4 @@ def plugin_loaded():
     favs_file = join(sublime.packages_path(), 'User', 'favorite_files_list.json')
     Favs = Favorites(favs_file)
     check_st_version()
-    Favorites.check_aliases(favs_file)
+    Favs.check_aliases(favs_file)

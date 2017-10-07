@@ -328,7 +328,7 @@ class Favorites(object):
 
         return sorted([["Group: " + k, "%d files" % len(v)] for k, v in self.obj.files["groups"].items()])
 
-    def check_aliases(favs):
+    def check_aliases(self, favs):
         """Add aliases to json file if necessary."""
 
         f = open(favs)

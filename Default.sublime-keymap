@@ -5,5 +5,5 @@
     { "keys": ["f5"], "command": "favorites_manager_update", "args": {"action": "update"}, "context": [{"key": "selector", "operator": "equal", "operand": "text.favorites_manager"}]},
     { "keys": ["f8"], "command": "favorites_manager_update", "args": {"action": "revert"}, "context": [{"key": "selector", "operator": "equal", "operand": "text.favorites_manager"}]},
     { "keys": ["ctrl+alt+enter"], "command": "favorites_manager_update", "args": {"action": "finalize"}, "context": [{"key": "selector", "operator": "equal", "operand": "text.favorites_manager"}]},
-    { "keys": ["escape"], "command": "close_file", "context": [{"key": "selector", "operator": "equal", "operand": "text.favorites_manager"}]},
+    { "keys": ["escape"], "command": "close_file", "context": [{"key": "selector", "operator": "equal", "operand": "text.favorites_manager"}]}
 ]
