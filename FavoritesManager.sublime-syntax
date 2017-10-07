@@ -1,0 +1,18 @@
+%YAML 1.2
+---
+name: Favorites Manager
+scope: text.favorites_manager
+contexts:
+  main:
+    - match: '^\s*(\w+.*?:\s*?$\n?)'
+      scope: favorites_manager.header
+    - match: '^\s*( {8,}|▪)'
+      captures:
+        1: italic
+      push:
+        - meta_scope: favorites_manager.italic
+        - match: $
+          pop: true
+  italic:
+    - match: '^.*$'
+      scope: favorites_manager.italic

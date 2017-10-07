@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>name</key>
+	<string>FavoritesManager</string>
+	<key>settings</key>
+	<array>
+		<dict>
+			<key>settings</key>
+			<dict>
+				<key>background</key>
+				<string>#e6e6e6</string>
+				<key>caret</key>
+				<string>#000000</string>
+				<key>foreground</key>
+				<string>#00000050</string>
+				<key>invisibles</key>
+				<string>#00000040</string>
+				<key>lineHighlight</key>
+				<string>#FFFFE588</string>
+				<key>selection</key>
+				<string>#00000029</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>Header or group</string>
+			<key>scope</key>
+			<string>favorites_manager.header</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#bc644a</string>
+				<key>background</key>
+				<string>#00000010</string>
+				<key>fontStyle</key>
+				<string>bold underline</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>Italic text</string>
+			<key>scope</key>
+			<string>favorites_manager.italic</string>
+			<key>settings</key>
+			<dict>
+				<key>fontStyle</key>
+				<string>italic</string>
+			</dict>
+		</dict>
+	</array>
+	<key>uuid</key>
+	<string>0f6581c4-b49d-47c2-8496-151319e5cd7b</string>
+</dict>
+</plist>

@@ -277,9 +277,11 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
         if view is not None:
             view_code = 0
             views = self.window.views()
+            # TODO: Widget views probably show up here too, maybe look into excluding them
+            # this should be ok? if v.file_name() could be enough
+            views = [v for v in views if v.file_name() and not (v.settings().get('is_widget') or v.is_scratch())]
 
             # If there is more than one view open allow saving all views
-            # TODO: Widget views probably show up here too, maybe look into exclduing them
             if len(views) > 1:
                 view_code = 1
                 # See if there is more than one group; if so allow saving of a specific group
@@ -398,5 +400,7 @@ def plugin_loaded():
     """Setup plugin."""
 
     global Favs
-    Favs = Favorites(join(sublime.packages_path(), 'User', 'favorite_files_list.json'))
+    favs_file = join(sublime.packages_path(), 'User', 'favorite_files_list.json')
+    Favs = Favorites(favs_file)
     check_st_version()
+    Favs.check_aliases(favs_file)

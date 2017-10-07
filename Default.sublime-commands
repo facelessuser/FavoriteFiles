@@ -16,6 +16,10 @@
         "command": "clean_orphaned_favorites"
     },
     {
+        "caption": "Favorite Files: Manage",
+        "command": "favorites_manager"
+    },
+    {
         "caption": "Favorite Files: Toggle Per Project",
         "command": "toggle_per_project_favorites"
     }

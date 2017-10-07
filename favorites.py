@@ -116,11 +116,16 @@ class FavFileMgr(object):
     def clean_orphaned_favorites(cls, file_list):
         """Clean out dead links in global list and group lists and remove empty groups."""
 
+        delete_alias = [i for i, f in enumerate(file_list["files"]) if not exists(f)]
         file_list["files"] = [f for f in file_list["files"] if exists(f)]
+        file_list["aliases"]["files"] = [f for i, f in enumerate(file_list["aliases"]["files"]) if i not in delete_alias]
         for g in file_list["groups"]:
+            delete_alias = [i for i, f in enumerate(file_list["groups"][g]) if not exists(f)]
             file_list["groups"][g] = [f for f in file_list["groups"][g] if exists(f)]
+            file_list["aliases"]["groups"][g] = [f for i, f in enumerate(file_list["aliases"]["groups"][g]) if i not in delete_alias]
             if len(file_list["groups"][g]) == 0:
                 del file_list["groups"][g]
+                del file_list["aliases"]["groups"][g]
 
     @classmethod
     def create_favorite_list(cls, obj, file_list, force=False):
@@ -182,7 +187,7 @@ class FavFileMgr(object):
         if not exists(obj.file_name):
             if force:
                 # Create file list if it doesn't exist
-                if cls.create_favorite_list(obj, {"version": 1, "files": [], "groups": {}}, force=True):
+                if cls.create_favorite_list(obj, {"version": 1, "files": [], "groups": {}, "aliases": {"files": [], "groups": {}}}, force=True):
                     error('Failed to create %s!' % basename(obj.file_name))
                     errors = True
                 else:
@@ -251,19 +256,28 @@ class Favorites(object):
 
         if self.exists(s, group=True):
             del self.obj.files["groups"][s]
+            del self.obj.files["aliases"]["groups"][s]
 
     def add_group(self, s):
         """Add favorite group."""
 
         self.obj.files["groups"][s] = []
+        self.obj.files["aliases"]["groups"][s] = []
 
     def set(self, s, group_name=None):
         """Add file in global or group list."""
 
+        # also adds the alias, that is the basename
+        # if the alias isn't changed, files will be displayed exactly as before
+
         if group_name is None:
             self.obj.files["files"].append(s)
+            self.obj.files["aliases"]["files"].append(basename(s))
         else:
             self.obj.files["groups"][group_name].append(s)
+            if group_name not in self.obj.files["aliases"]["groups"]:
+                self.obj.files["aliases"]["groups"][group_name] = []
+            self.obj.files["aliases"]["groups"][group_name].append(basename(s))
 
     def exists(self, s, group=False, group_name=None):
         """Check if group or file exists."""
@@ -283,18 +297,26 @@ class Favorites(object):
 
         if group_name is None:
             if self.exists(s):
+                index = self.obj.files["files"].index(s)
                 self.obj.files["files"].remove(s)
+                del self.obj.files["aliases"]["files"][index]
         else:
             if self.exists(s, group_name=group_name):
+                index = self.obj.files["groups"][group_name].index(s)
                 self.obj.files["groups"][group_name].remove(s)
+                self.obj.files["aliases"]["groups"][group_name][index]
 
     def all_files(self, group_name=None):
         """Return all files in group or global list."""
 
         if group_name is not None:
-            return [[basename(path), path] for path in self.obj.files["groups"][group_name]]
+            groups = [path for path in self.obj.files["groups"][group_name]]
+            aliases = [alias for alias in self.obj.files["aliases"]["groups"][group_name]]
+            return [[aliases[n], path] for n, path in enumerate(groups)]
         else:
-            return [[basename(path), path] for path in self.obj.files["files"]]
+            files = [path for path in self.obj.files["files"]]
+            aliases = [alias for alias in self.obj.files["aliases"]["files"]]
+            return [[aliases[n], path] for n, path in enumerate(files)]
 
     def group_count(self):
         """Return group count."""
@@ -305,3 +327,18 @@ class Favorites(object):
         """Return all groups."""
 
         return sorted([["Group: " + k, "%d files" % len(v)] for k, v in self.obj.files["groups"].items()])
+
+    def check_aliases(self, favs):
+        """Add aliases to json file if necessary."""
+
+        f = open(favs)
+        data = json.load(f)
+        if 'aliases' not in data:
+            data['aliases'] = {"files": [], "groups": {}}
+            for file in data['files']:
+                data['aliases']['files'].append(basename(file))
+            for group in data['groups']:
+                data['aliases']['groups'][group] = [basename(file) for file in data['groups'][group]]
+            with open(favs, "w") as file:
+                json.dump(data, file, sort_keys=True, indent=4, separators=(',', ': '))
+        f.close()
