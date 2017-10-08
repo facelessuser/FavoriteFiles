@@ -119,10 +119,6 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
                 else:
                     # File does not exist on disk; cannot add
                     disk_omit_count += 1
-            else:
-                message = "is already among your favorite files and has not been added."
-                print(n, message)   # full filename printed to the console
-                sublime.active_window().status_message("Some file " + message)
         if added:
             # Save if files were added
             Favs.save(True)

@@ -296,7 +296,7 @@ class Favorites(object):
         """Check if file exists, and return its index in this case."""
 
         def is_present_in(files_list):
-            """Returns the index if the file is present"""
+            """Returns the index if the file is present."""
             for index, entry in enumerate(files_list):
                 if entry['file'] == s:
                     return index
