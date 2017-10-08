@@ -103,6 +103,25 @@ class FavFileMgr(object):
     """Handle file actions."""
 
     @classmethod
+    def check_aliases(cls, favs):
+        """Add aliases to json file, if updating from version 1."""
+
+        f = open(favs)
+        data = json.load(f)
+
+        if data["version"] == 1:
+            data["files"] = [{"file": file, "alias": basename(file)}
+                             for file in data["files"]]
+
+            for group in data['groups']:
+                data['groups'][group] = [{"file": file, "alias": basename(file)}
+                                         for file in data['groups'][group]]
+            data["version"] = 1.1
+            with open(favs, "w") as file:
+                json.dump(data, file, sort_keys=True, indent=4, separators=(',', ': '))
+        f.close()
+
+    @classmethod
     def is_global_file(cls, obj):
         """Check if file is a global one."""
 
@@ -116,9 +135,9 @@ class FavFileMgr(object):
     def clean_orphaned_favorites(cls, file_list):
         """Clean out dead links in global list and group lists and remove empty groups."""
 
-        file_list["files"] = [f for f in file_list["files"] if exists(f)]
+        file_list["files"] = [f for f in file_list["files"] if exists(f['file'])]
         for g in file_list["groups"]:
-            file_list["groups"][g] = [f for f in file_list["groups"][g] if exists(f)]
+            file_list["groups"][g] = [f for f in file_list["groups"][g] if exists(f['file'])]
             if len(file_list["groups"][g]) == 0:
                 del file_list["groups"][g]
 
@@ -179,10 +198,11 @@ class FavFileMgr(object):
         # Is project enabled
         FavProjects.project_adjust(obj, win_id, force)
 
+        cls.check_aliases(obj.file_name)
         if not exists(obj.file_name):
             if force:
                 # Create file list if it doesn't exist
-                if cls.create_favorite_list(obj, {"version": 1, "files": [], "groups": {}}, force=True):
+                if cls.create_favorite_list(obj, {"version": 1.1, "files": [], "groups": {}}, force=True):
                     error('Failed to create %s!' % basename(obj.file_name))
                     errors = True
                 else:
@@ -260,6 +280,8 @@ class Favorites(object):
     def set(self, s, group_name=None):
         """Add file in global or group list."""
 
+        s = {"file": s, "alias": basename(s)}
+
         if group_name is None:
             self.obj.files["files"].append(s)
         else:
@@ -272,29 +294,33 @@ class Favorites(object):
             # See if group exists
             return True if s in self.obj.files["groups"] else False
         else:
-            # See if file in global or group list exists
+            # See if file in global or group list exists, and return its index
             if group_name is None:
-                return True if s in set(self.obj.files["files"]) else False
+                i = [i for i, f in enumerate(self.obj.files["files"]) if f["file"] == s]
+                return i[0] if i else False
             else:
-                return True if s in set(self.obj.files["groups"][group_name]) else False
+                i = [i for i, f in enumerate(self.obj.files["groups"][group_name]) if f["file"] == s]
+                return i[0] if i else False
 
     def remove(self, s, group_name=None):
         """Remove file in group or global list."""
 
         if group_name is None:
-            if self.exists(s):
-                self.obj.files["files"].remove(s)
+            index = self.exists(s)
+            if index is not False:
+                del self.obj.files["files"][index]
         else:
-            if self.exists(s, group_name=group_name):
-                self.obj.files["groups"][group_name].remove(s)
+            index = self.exists(s, group_name=group_name)
+            if index is not False:
+                del self.obj.files["groups"][group_name][index]
 
     def all_files(self, group_name=None):
         """Return all files in group or global list."""
 
         if group_name is not None:
-            return [[basename(path), path] for path in self.obj.files["groups"][group_name]]
+            return [[path['alias'], path['file']] for path in self.obj.files["groups"][group_name]]
         else:
-            return [[basename(path), path] for path in self.obj.files["files"]]
+            return [[path['alias'], path['file']] for path in self.obj.files["files"]]
 
     def group_count(self):
         """Return group count."""
