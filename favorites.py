@@ -106,20 +106,20 @@ class FavFileMgr(object):
     def check_aliases(cls, favs):
         """Add aliases to json file, if updating from version 1."""
 
-        f = open(favs)
-        data = json.load(f)
+        with open(favs) as f:
+            content = sanitize_json(f.read(), True)
+        data = json.loads(content)
 
         if data["version"] == 1:
-            data["files"] = [{"file": file, "alias": basename(file)}
-                             for file in data["files"]]
+            data["files"] = [{"file": filename, "alias": basename(filename)}
+                             for filename in data["files"]]
 
             for group in data['groups']:
-                data['groups'][group] = [{"file": file, "alias": basename(file)}
-                                         for file in data['groups'][group]]
-            data["version"] = 1.1
+                data['groups'][group] = [{"file": filename, "alias": basename(filename)}
+                                         for filename in data['groups'][group]]
+            data["version"] = 2
             with open(favs, "w") as file:
                 json.dump(data, file, sort_keys=True, indent=4, separators=(',', ': '))
-        f.close()
 
     @classmethod
     def is_global_file(cls, obj):
@@ -202,7 +202,7 @@ class FavFileMgr(object):
         if not exists(obj.file_name):
             if force:
                 # Create file list if it doesn't exist
-                if cls.create_favorite_list(obj, {"version": 1.1, "files": [], "groups": {}}, force=True):
+                if cls.create_favorite_list(obj, {"version": 2, "files": [], "groups": {}}, force=True):
                     error('Failed to create %s!' % basename(obj.file_name))
                     errors = True
                 else:
@@ -269,7 +269,7 @@ class Favorites(object):
     def remove_group(self, s):
         """Remove a group."""
 
-        if self.exists(s, group=True):
+        if self.group_exists(s):
             del self.obj.files["groups"][s]
 
     def add_group(self, s):
@@ -287,31 +287,38 @@ class Favorites(object):
         else:
             self.obj.files["groups"][group_name].append(s)
 
-    def exists(self, s, group=False, group_name=None):
-        """Check if group or file exists."""
+    def group_exists(self, s):
+        """Check if group exists."""
 
-        if group:
-            # See if group exists
-            return True if s in self.obj.files["groups"] else False
+        return s in self.obj.files["groups"]
+
+    def file_index(self, s, group_name=None):
+        """Check if file exists, and return its index in this case."""
+
+        def is_present_in(files_list):
+            """Returns the index if the file is present"""
+            for index, entry in enumerate(files_list):
+                if entry['file'] == s:
+                    return index
+            return None
+
+        if group_name is None:
+            index = is_present_in(self.obj.files["files"])
         else:
-            # See if file in global or group list exists, and return its index
-            if group_name is None:
-                i = [i for i, f in enumerate(self.obj.files["files"]) if f["file"] == s]
-                return i[0] if i else False
-            else:
-                i = [i for i, f in enumerate(self.obj.files["groups"][group_name]) if f["file"] == s]
-                return i[0] if i else False
+            index = is_present_in(self.obj.files["groups"][group_name])
+
+        return index
 
     def remove(self, s, group_name=None):
         """Remove file in group or global list."""
 
         if group_name is None:
-            index = self.exists(s)
-            if index is not False:
+            index = self.file_index(s)
+            if index is not None:
                 del self.obj.files["files"][index]
         else:
-            index = self.exists(s, group_name=group_name)
-            if index is not False:
+            index = self.file_index(s, group_name=group_name)
+            if index is not None:
                 del self.obj.files["groups"][group_name][index]
 
     def all_files(self, group_name=None):

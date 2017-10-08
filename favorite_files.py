@@ -112,13 +112,17 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
         added = 0
         # Iterate names and add them to group/global if not already added
         for n in names:
-            if not Favs.exists(n, group_name=group_name):
+            if Favs.file_index(n, group_name=group_name) is None:
                 if exists(n):
                     Favs.set(n, group_name=group_name)
                     added += 1
                 else:
                     # File does not exist on disk; cannot add
                     disk_omit_count += 1
+            else:
+                message = "is already among your favorite files and has not been added."
+                print(n, message)   # full filename printed to the console
+                sublime.active_window().status_message("Some file " + message)
         if added:
             # Save if files were added
             Favs.save(True)
@@ -138,7 +142,7 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
             # Require an actual name
             error("Please provide a valid group name.")
             repeat = True
-        elif Favs.exists(value, group=True):
+        elif Favs.group_exists(value):
             # Do not allow duplicates
             error("Group \"%s\" already exists." % value)
             repeat = True
