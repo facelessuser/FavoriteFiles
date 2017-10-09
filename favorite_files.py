@@ -8,7 +8,7 @@ Copyright (c) 2012 - 2015 Isaac Muse <isaacmuse@gmail.com>
 import sublime
 import sublime_plugin
 from os.path import join, exists
-from FavoriteFiles.favorites import Favorites
+from FavoriteFiles.favorites import Favorites, FavFileMgr
 from FavoriteFiles.lib.notify import error
 
 Favs = None
@@ -29,10 +29,12 @@ class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
     """Open the selected favorite(s)."""
 
     def open_file(self, value, group=False):
-        """Open the file(s)."""
+        """Open the file(s). Also called when just editing aliases."""
 
         if value >= 0:
+
             active_group = self.window.active_group()
+
             if value < self.num_files or (group and value < self.num_files + 1):
                 # Open global file, file in group, or all files in group
                 names = []
@@ -50,6 +52,16 @@ class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
                 # Iterate through file list ensure they load in proper view index order
                 count = 0
                 focus_view = None
+
+                # just changing the alias, disallow for whole group
+                if self.set_alias and len(names) == 1:
+                    index = value if not self.group_name else value - 1
+                    for_file = self.files[index]
+                    Favs.prompt_for_alias(index, for_file, self.group_name)
+                    return
+                elif self.set_alias:
+                    return
+
                 for n in names:
                     if exists(n):
                         view = self.window.open_file(n)
@@ -71,21 +83,24 @@ class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
             else:
                 # Decend into group
                 value -= self.num_files
-                self.files = Favs.all_files(group_name=self.groups[value][0].replace("Group: ", "", 1))
+                self.group_name = self.groups[value][0].replace("Group: ", "", 1)
+                self.files = Favs.all_files(group_name=self.group_name)
                 self.num_files = len(self.files)
                 self.groups = []
                 self.num_groups = 0
 
                 # Show files in group
+                s = ("Open Group", "For which file in this group?")
+                string = s[1] if self.set_alias else s[0]
                 if self.num_files:
                     self.window.show_quick_panel(
-                        [["Open Group", ""]] + self.files,
+                        [[string, ""]] + self.files,
                         lambda x: self.open_file(x, group=True)
                     )
                 else:
                     error("No favorites found! Try adding some.")
 
-    def run(self):
+    def run(self, change_alias=False):
         """Run the command."""
 
         if not Favs.load(win_id=self.window.id()):
@@ -93,6 +108,9 @@ class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
             self.num_files = len(self.files)
             self.groups = Favs.all_groups()
             self.num_groups = len(self.groups)
+            # initialize group to None, will be set if descending into a group
+            self.group_name = None
+            self.set_alias = change_alias
             if self.num_files + self.num_groups > 0:
                 self.window.show_quick_panel(
                     self.files + self.groups,
@@ -122,6 +140,11 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
         if added:
             # Save if files were added
             Favs.save(True)
+            if len(names) == 1 and settings().get('always_ask_alias', False):
+                # pass index as -1 because json will be sorted and we can't know it
+                # it will be searched in the called function
+                Favs.prompt_for_alias(-1, names[0], group_name)
+
         if disk_omit_count:
             # Alert that files could be added
             if disk_omit_count == 1:
@@ -365,24 +388,32 @@ class RemoveFavoriteFileCommand(sublime_plugin.WindowCommand):
 class TogglePerProjectFavoritesCommand(sublime_plugin.WindowCommand):
     """Toggle per project favorites."""
 
-    def run(self):
+    def run(self, restarted=False):
         """Run the command."""
         win_id = self.window.id()
 
         # Try and toggle back to global first
-        if not Favs.toggle_global(win_id):
+        if not restarted and not Favs.toggle_global(win_id):
+            # disable project tracking at restart
+            data = FavFileMgr.fav_file(global_favs_file, read=True)
+            data['project_mode'] = False
+            FavFileMgr.fav_file(global_favs_file, data, write=True)
             return
 
         # Try and toggle per project
         if Favs.toggle_per_projects(win_id):
             error('Could not find a project file!')
         else:
+            # remember toggle for project state
+            if not Favs.obj.files['project_mode']:
+                Favs.obj.files['project_mode'] = True
+                Favs.save(True)
             Favs.open(win_id=self.window.id())
 
     def is_enabled(self):
         """Check if command is enabled."""
 
-        return sublime.load_settings("favorite_files.sublime-settings").get("enable_per_projects", False)
+        return settings().get("enable_per_projects", False)
 
 
 def check_st_version():
@@ -394,9 +425,18 @@ def check_st_version():
             window.run_command('open_file', {"file": "${packages}/FavoriteFiles/messages/upgrade-st-3080.md"})
 
 
+def settings():
+    return sublime.load_settings("favorite_files.sublime-settings")
+
+
 def plugin_loaded():
     """Setup plugin."""
+    global Favs, global_favs_file
 
-    global Favs
-    Favs = Favorites(join(sublime.packages_path(), 'User', 'favorite_files_list.json'))
+    global_favs_file = join(sublime.packages_path(), 'User', 'favorite_files_list.json')
+    Favs = Favorites(global_favs_file)
     check_st_version()
+
+    # restore toggle for project state if active
+    if Favs.obj.files['project_mode']:
+        sublime.active_window().run_command("toggle_per_project_favorites", {"restarted": True})

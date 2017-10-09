@@ -5,5 +5,8 @@
     "enable_per_projects": true,
 
     // Use subnotify if available
-    "use_sub_notify": true
+    "use_sub_notify": true,
+
+    // prompt for a file alias every time you add a single file
+    "always_ask_alias": true
 }
