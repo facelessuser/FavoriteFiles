@@ -29,7 +29,8 @@ class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
     """Open the selected favorite(s)."""
 
     def prompt_for_alias(self, index, name, group_name=None):
-        """Prompt for an alias for the favorite file.
+        """
+        Prompt for an alias for the favorite file.
 
             index      : the evaluated quick panel index
             name       : a tuple (alias, path)
