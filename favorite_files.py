@@ -8,7 +8,7 @@ Copyright (c) 2012 - 2015 Isaac Muse <isaacmuse@gmail.com>
 import sublime
 import sublime_plugin
 from os.path import join, exists
-from FavoriteFiles.favorites import Favorites, FavFileMgr
+from FavoriteFiles.favorites import Favorites
 from FavoriteFiles.lib.notify import error
 
 Favs = None
@@ -28,13 +28,25 @@ class CleanOrphanedFavoritesCommand(sublime_plugin.WindowCommand):
 class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
     """Open the selected favorite(s)."""
 
+    def prompt_for_alias(self, index, name, group_name=None):
+        """Prompt for an alias for the favorite file.
+
+            index      : the evaluated quick panel index
+            name       : a tuple (alias, path)
+            group_name : the group browsed in the quick panel
+        """
+
+        w = sublime.active_window()
+        # sending the variables to Favs, needed there for set_alias()
+        Favs.changing_alias_for = index, name, group_name
+        w.show_input_panel("Alias for this file:", name[0],
+                           Favs.set_alias, None, None)
+
     def open_file(self, value, group=False):
         """Open the file(s). Also called when just editing aliases."""
 
         if value >= 0:
-
             active_group = self.window.active_group()
-
             if value < self.num_files or (group and value < self.num_files + 1):
                 # Open global file, file in group, or all files in group
                 names = []
@@ -57,7 +69,7 @@ class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
                 if self.set_alias and len(names) == 1:
                     index = value if not self.group_name else value - 1
                     for_file = self.files[index]
-                    Favs.prompt_for_alias(index, for_file, self.group_name)
+                    self.prompt_for_alias(index, for_file, self.group_name)
                     return
                 elif self.set_alias:
                     return
@@ -123,6 +135,26 @@ class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
 class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
     """Add favorite(s) to the global group or the specified group."""
 
+    def prompt_for_alias(self, name, group_name=None):
+        """Prompt for an alias for the favorite file."""
+
+        def find_index_in(node):
+            """Find the index of the file that has just been added."""
+            for index, f in enumerate(node):
+                if f['file'] == name:
+                    return index, (f['alias'], name)
+
+        # the json has been sorted and the index must be retrieved
+        if group_name:
+            index, name = find_index_in(Favs.obj.files['groups'][group_name])
+        else:
+            index, name = find_index_in(Favs.obj.files['files'])
+
+        w = sublime.active_window()
+        Favs.changing_alias_for = index, name, group_name
+        w.show_input_panel("Alias for this file:", name[0],
+                           Favs.set_alias, None, None)
+
     def add(self, names, group_name=None):
         """Add favorites."""
 
@@ -141,9 +173,7 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
             # Save if files were added
             Favs.save(True)
             if len(names) == 1 and settings().get('always_ask_alias', False):
-                # pass index as -1 because json will be sorted and we can't know it
-                # it will be searched in the called function
-                Favs.prompt_for_alias(-1, names[0], group_name)
+                self.prompt_for_alias(names[0], group_name)
 
         if disk_omit_count:
             # Alert that files could be added
@@ -388,26 +418,18 @@ class RemoveFavoriteFileCommand(sublime_plugin.WindowCommand):
 class TogglePerProjectFavoritesCommand(sublime_plugin.WindowCommand):
     """Toggle per project favorites."""
 
-    def run(self, restarted=False):
+    def run(self):
         """Run the command."""
         win_id = self.window.id()
 
         # Try and toggle back to global first
-        if not restarted and not Favs.toggle_global(win_id):
-            # disable project tracking at restart
-            data = FavFileMgr.fav_file(global_favs_file, read=True)
-            data['project_mode'] = False
-            FavFileMgr.fav_file(global_favs_file, data, write=True)
+        if not Favs.toggle_global(win_id):
             return
 
         # Try and toggle per project
         if Favs.toggle_per_projects(win_id):
             error('Could not find a project file!')
         else:
-            # remember toggle for project state
-            if not Favs.obj.files['project_mode']:
-                Favs.obj.files['project_mode'] = True
-                Favs.save(True)
             Favs.open(win_id=self.window.id())
 
     def is_enabled(self):
@@ -432,12 +454,7 @@ def settings():
 
 def plugin_loaded():
     """Setup plugin."""
-    global Favs, global_favs_file
 
-    global_favs_file = join(sublime.packages_path(), 'User', 'favorite_files_list.json')
-    Favs = Favorites(global_favs_file)
+    global Favs
+    Favs = Favorites(join(sublime.packages_path(), 'User', 'favorite_files_list.json'))
     check_st_version()
-
-    # restore toggle for project state if active
-    if Favs.obj.files['project_mode']:
-        sublime.active_window().run_command("toggle_per_project_favorites", {"restarted": True})

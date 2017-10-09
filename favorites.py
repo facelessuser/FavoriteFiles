@@ -103,24 +103,26 @@ class FavFileMgr(object):
     """Handle file actions."""
 
     @classmethod
-    def fav_file(cls, filename, data=False, read=False, write=False):
-        """Read or write currently handled favorite list."""
+    def read_favs_file(cls, filename):
+        """Read currently handled favorite list and returns its content."""
 
-        if read:
-            with open(filename) as file:
-                # Allow C style comments and be forgiving of trailing commas
-                content = sanitize_json(file.read(), True)
-            return json.loads(content)
-
-        elif write:
-            with open(filename, "w") as file:
-                json.dump(data, file, sort_keys=True, indent=4, separators=(',', ': '))
+        with open(filename) as file:
+            # Allow C style comments and be forgiving of trailing commas
+            content = sanitize_json(file.read(), True)
+        return json.loads(content)
 
     @classmethod
-    def check_aliases(cls, favs):
-        """Add aliases to json file, if updating from version 1."""
+    def write_favs_file(cls, filename, data):
+        """Write currently handled favorite list."""
 
-        data = cls.fav_file(favs, read=True)
+        with open(filename, "w") as file:
+            json.dump(data, file, sort_keys=True, indent=4, separators=(',', ': '))
+
+    @classmethod
+    def check_plugin_version(cls, favs):
+        """Perform necessary operations, when updating from a previous version."""
+
+        data = cls.read_favs_file(favs)
 
         if data["version"] == 1:
             data["files"] = [{"file": filename, "alias": basename(filename)}
@@ -130,12 +132,7 @@ class FavFileMgr(object):
                 data['groups'][group] = [{"file": filename, "alias": basename(filename)}
                                          for filename in data['groups'][group]]
             data["version"] = 2
-
-            # in global file only, entry to store toggle project state
-            if basename(favs) == 'favorite_files_list.json' and 'project_mode' not in data:
-                data['project_mode'] = False
-
-            cls.fav_file(favs, data=data, write=True)
+            cls.write_favs_file(favs, data)
 
     @classmethod
     def is_global_file(cls, obj):
@@ -166,7 +163,7 @@ class FavFileMgr(object):
         if not exists(obj.file_name) or force:
             try:
                 # Save as a JSON file
-                cls.fav_file(obj.file_name, data=file_list, write=True)
+                cls.write_favs_file(obj.file_name, file_list)
                 obj.last_access = getmtime(obj.file_name)
             except Exception:
                 error('Failed to write %s!' % basename(obj.file_name))
@@ -179,7 +176,7 @@ class FavFileMgr(object):
 
         errors = False
         try:
-            file_list = cls.fav_file(obj.file_name, read=True)
+            file_list = cls.read_favs_file(obj.file_name)
 
             # Clean out dead links
             if clean:
@@ -209,7 +206,7 @@ class FavFileMgr(object):
         # Is project enabled
         FavProjects.project_adjust(obj, win_id, force)
 
-        cls.check_aliases(obj.file_name)
+        cls.check_plugin_version(obj.file_name)
         if not exists(obj.file_name):
             if force:
                 # Create file list if it doesn't exist
@@ -287,37 +284,6 @@ class Favorites(object):
         """Add favorite group."""
 
         self.obj.files["groups"][s] = []
-
-    def prompt_for_alias(self, index, name, group_name=None):
-        """
-        Prompt for an alias for the favorite file.
-
-            Args passed by SelectFavoriteFileCommand:
-
-            index      : the evaluated quick panel index
-            name       : a tuple (alias, path)
-            group_name : the group browsed in the quick panel
-        """
-
-        def find_index_in(node):
-            """Find the index of the file that has been just added."""
-            for f in node:
-                if f['file'] == name:
-                    return index, (f['alias'], name)
-
-        # CASE: index == -1
-        # file has just been added and its index in the sorted json must be
-        # retrieved. argument 'name' is the simple filename in this case, not a
-        # tuple, so we have to address that
-        if index == -1 and group_name:
-            index, name = find_index_in(self.obj.files['groups'][group_name])
-        elif index == -1:
-            index, name = find_index_in(self.obj.files['files'])
-
-        w = sublime.active_window()
-        self.changing_alias_for = index, name, group_name
-        w.show_input_panel("Alias for this file:", name[0],
-                           self.set_alias, None, None)
 
     def set_alias(self, n):
         """Set an alias for the favorite file."""
