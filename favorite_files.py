@@ -426,6 +426,7 @@ def check_st_version():
 
 
 def settings():
+    """Return settings file."""
     return sublime.load_settings("favorite_files.sublime-settings")
 
 

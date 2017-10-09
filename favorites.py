@@ -289,7 +289,8 @@ class Favorites(object):
         self.obj.files["groups"][s] = []
 
     def prompt_for_alias(self, index, name, group_name=None):
-        """Prompt for an alias for the favorite file.
+        """
+        Prompt for an alias for the favorite file.
 
             Args passed by SelectFavoriteFileCommand:
 
@@ -297,8 +298,9 @@ class Favorites(object):
             name       : a tuple (alias, path)
             group_name : the group browsed in the quick panel
         """
+
         def find_index_in(node):
-            '''Find the index of the file that has been just added.'''
+            """Find the index of the file that has been just added."""
             for f in node:
                 if f['file'] == name:
                     return index, (f['alias'], name)
