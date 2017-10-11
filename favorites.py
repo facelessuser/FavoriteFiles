@@ -206,7 +206,6 @@ class FavFileMgr(object):
         # Is project enabled
         FavProjects.project_adjust(obj, win_id, force)
 
-        cls.check_plugin_version(obj.file_name)
         if not exists(obj.file_name):
             if force:
                 # Create file list if it doesn't exist
@@ -218,6 +217,7 @@ class FavFileMgr(object):
             else:
                 errors = True
 
+        cls.check_plugin_version(obj.file_name)
         # Only reload if file has been written since last access (or if forced reload)
         if not errors and (force or getmtime(obj.file_name) != obj.last_access):
             errors = cls.load_favorites(obj, clean=clean)
