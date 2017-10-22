@@ -12,6 +12,10 @@
         "command": "remove_favorite_file"
     },
     {
+        "caption": "Favorite Files: Edit Alias for File",
+        "command": "edit_alias_favorite_file"
+    },
+    {
         "caption": "Favorite Files: Clean Orphaned Favorites",
         "command": "clean_orphaned_favorites"
     },

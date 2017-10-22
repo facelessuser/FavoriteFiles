@@ -7,7 +7,7 @@ Copyright (c) 2012 - 2015 Isaac Muse <isaacmuse@gmail.com>
 
 import sublime
 import sublime_plugin
-from os.path import join, exists
+from os.path import join, exists, basename
 from FavoriteFiles.favorites import Favorites
 from FavoriteFiles.lib.notify import error
 
@@ -25,11 +25,73 @@ class CleanOrphanedFavoritesCommand(sublime_plugin.WindowCommand):
             Favs.load(force=True, clean=True, win_id=self.window.id())
 
 
+class EditAliasFavoriteFileCommand(sublime_plugin.WindowCommand):
+    """Open the selected favorite(s)."""
+
+    def edit_alias(self, value, group=False):
+        """Edit alias."""
+
+        if value == -1:
+            return
+
+        if value >= 0:
+            if value < self.num_files or (group and value < self.num_files + 1):
+                # Open global file, file in group, or all files in group
+                name = self.files[value][0]
+
+                self.current_index = value
+                self.window.show_input_panel("Alias:", name, self.apply_alias, None, None)
+            else:
+                # Decend into group
+                value -= self.num_files
+                self.group_name = self.groups[value][0].replace("Group: ", "", 1)
+                self.files = Favs.all_files(group_name=self.group_name)
+                self.num_files = len(self.files)
+                self.groups = []
+                self.num_groups = 0
+
+                # Show files in group
+                if self.num_files:
+                    self.window.show_quick_panel(
+                        self.files,
+                        lambda x: self.edit_alias(x, group=True)
+                    )
+                else:
+                    error("No favorites found! Try adding some.")
+
+    def apply_alias(self, value):
+        """Apply alias."""
+
+        if value:
+            Favs.set_alias(value, self.current_index, self.group_name)
+
+    def run(self):
+        """Run the command."""
+
+        if not Favs.load(win_id=self.window.id()):
+            self.files = Favs.all_files()
+            self.num_files = len(self.files)
+            self.groups = Favs.all_groups()
+            self.num_groups = len(self.groups)
+            # initialize group to None, will be set if descending into a group
+            self.group_name = None
+            if self.num_files + self.num_groups > 0:
+                self.window.show_quick_panel(
+                    self.files + self.groups,
+                    self.edit_alias
+                )
+            else:
+                error("No favorites found! Try adding some.")
+
+
 class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
     """Open the selected favorite(s)."""
 
     def open_file(self, value, group=False):
-        """Open the file(s)."""
+        """Open the file(s).."""
+
+        if value == -1:
+            return
 
         if value >= 0:
             active_group = self.window.active_group()
@@ -50,6 +112,7 @@ class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
                 # Iterate through file list ensure they load in proper view index order
                 count = 0
                 focus_view = None
+
                 for n in names:
                     if exists(n):
                         view = self.window.open_file(n)
@@ -93,6 +156,7 @@ class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
             self.num_files = len(self.files)
             self.groups = Favs.all_groups()
             self.num_groups = len(self.groups)
+            # initialize group to None, will be set if descending into a group
             if self.num_files + self.num_groups > 0:
                 self.window.show_quick_panel(
                     self.files + self.groups,
@@ -105,6 +169,29 @@ class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
 class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
     """Add favorite(s) to the global group or the specified group."""
 
+    def prompt_for_alias(self, name, group_name=None):
+        """Prompt for an alias for the favorite file."""
+
+        index = None
+        files = Favs.obj.files['groups'][group_name] if group_name is not None else Favs.obj.files['files']
+
+        for idx, f in enumerate(files):
+            if f['file'] == name:
+                index = idx
+                break
+
+        if index is not None:
+            self.current_index = index
+            self.group_name = group_name
+
+        self.window.show_input_panel("Alias:", name, self.apply_alias, None, None)
+
+    def apply_alias(self, value):
+        """Apply alias."""
+
+        if value:
+            Favs.set_alias(value, self.current_index, self.group_name)
+
     def add(self, names, group_name=None):
         """Add favorites."""
 
@@ -112,7 +199,7 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
         added = 0
         # Iterate names and add them to group/global if not already added
         for n in names:
-            if not Favs.exists(n, group_name=group_name):
+            if Favs.file_index(n, group_name=group_name) is None:
                 if exists(n):
                     Favs.set(n, group_name=group_name)
                     added += 1
@@ -122,6 +209,9 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
         if added:
             # Save if files were added
             Favs.save(True)
+            if len(names) == 1 and settings().get('always_ask_alias', False):
+                self.prompt_for_alias(basename(names[0]), group_name)
+
         if disk_omit_count:
             # Alert that files could be added
             if disk_omit_count == 1:
@@ -138,7 +228,7 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
             # Require an actual name
             error("Please provide a valid group name.")
             repeat = True
-        elif Favs.exists(value, group=True):
+        elif Favs.group_exists(value):
             # Do not allow duplicates
             error("Group \"%s\" already exists." % value)
             repeat = True
@@ -382,7 +472,7 @@ class TogglePerProjectFavoritesCommand(sublime_plugin.WindowCommand):
     def is_enabled(self):
         """Check if command is enabled."""
 
-        return sublime.load_settings("favorite_files.sublime-settings").get("enable_per_projects", False)
+        return settings().get("enable_per_projects", False)
 
 
 def check_st_version():
@@ -392,6 +482,11 @@ def check_st_version():
         window = sublime.active_window()
         if window is not None:
             window.run_command('open_file', {"file": "${packages}/FavoriteFiles/messages/upgrade-st-3080.md"})
+
+
+def settings():
+    """Return settings file."""
+    return sublime.load_settings("favorite_files.sublime-settings")
 
 
 def plugin_loaded():
