@@ -1,22 +1,26 @@
 [
     {
         "caption": "Favorite Files: Open File(s)",
-        "command": "select_favorite_file"
+        "command": "favorite_files_open"
     },
     {
         "caption": "Favorite Files: Add File(s)",
-        "command": "add_favorite_file"
+        "command": "favorite_files_add"
     },
     {
         "caption": "Favorite Files: Remove File(s)",
-        "command": "remove_favorite_file"
+        "command": "favorite_files_remove"
+    },
+    {
+        "caption": "Favorite Files: Edit File Alias",
+        "command": "favorite_files_edit_alias"
     },
     {
         "caption": "Favorite Files: Clean Orphaned Favorites",
-        "command": "clean_orphaned_favorites"
+        "command": "favorite_files_clean_orphans"
     },
     {
         "caption": "Favorite Files: Toggle Per Project",
-        "command": "toggle_per_project_favorites"
+        "command": "favorite_files_toggle_per_project"
     }
 ]
