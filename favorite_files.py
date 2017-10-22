@@ -7,7 +7,7 @@ Copyright (c) 2012 - 2015 Isaac Muse <isaacmuse@gmail.com>
 
 import sublime
 import sublime_plugin
-from os.path import join, exists, basename
+import os
 from FavoriteFiles.favorites import Favorites
 from FavoriteFiles.lib.notify import error
 
@@ -114,7 +114,7 @@ class FavoriteFilesOpenCommand(sublime_plugin.WindowCommand):
                 focus_view = None
 
                 for n in names:
-                    if exists(n):
+                    if os.path.exists(n):
                         view = self.window.open_file(n)
                         if view is not None:
                             focus_view = view
@@ -200,7 +200,7 @@ class FavoriteFilesAddCommand(sublime_plugin.WindowCommand):
         # Iterate names and add them to group/global if not already added
         for n in names:
             if Favs.file_index(n, group_name=group_name) is None:
-                if exists(n):
+                if os.path.exists(n):
                     Favs.set(n, group_name=group_name)
                     added += 1
                 else:
@@ -210,7 +210,7 @@ class FavoriteFilesAddCommand(sublime_plugin.WindowCommand):
             # Save if files were added
             Favs.save(True)
             if len(names) == 1 and settings().get('always_ask_alias', False):
-                self.prompt_for_alias(basename(names[0]), group_name)
+                self.prompt_for_alias(os.path.basename(names[0]), group_name)
 
         if disk_omit_count:
             # Alert that files could be added
@@ -493,5 +493,5 @@ def plugin_loaded():
     """Setup plugin."""
 
     global Favs
-    Favs = Favorites(join(sublime.packages_path(), 'User', 'favorite_files_list.json'))
+    Favs = Favorites(os.path.join(sublime.packages_path(), 'User', 'favorite_files_list.json'))
     check_st_version()

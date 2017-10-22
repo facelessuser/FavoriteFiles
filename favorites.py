@@ -6,7 +6,7 @@ Copyright (c) 2012 - 2015 Isaac Muse <isaacmuse@gmail.com>
 """
 
 import sublime
-from os.path import exists, basename, getmtime, splitext
+import os
 import json
 
 from FavoriteFiles.lib.file_strip.json import sanitize_json
@@ -63,8 +63,8 @@ class FavProjects(object):
         if enabled:
             project = cls.get_project(win_id)
             if project is not None:
-                project_favs = splitext(project)[0] + "-favs.json"
-            if not exists(project_favs) and not force:
+                project_favs = os.path.splitext(project)[0] + "-favs.json"
+            if not os.path.exists(project_favs) and not force:
                 error('Cannot find favorite list!\nProject name probably changed.\nSwitching to global list.')
                 obj.projects.remove(win_id)
                 obj.file_name = obj.global_file
@@ -132,12 +132,12 @@ class FavFileMgr(object):
         """Update to version 2."""
 
         data["files"] = [
-            {"file": filename, "alias": basename(filename)} for filename in data["files"]
+            {"file": filename, "alias": os.path.basename(filename)} for filename in data["files"]
         ]
 
         for group in data['groups']:
             data['groups'][group] = [
-                {"file": filename, "alias": basename(filename)} for filename in data['groups'][group]
+                {"file": filename, "alias": os.path.basename(filename)} for filename in data['groups'][group]
             ]
         data["version"] = 2
         cls.write_favs_file(favs, data)
@@ -152,9 +152,9 @@ class FavFileMgr(object):
     def clean_orphaned_favorites(cls, file_list):
         """Clean out dead links in global list and group lists and remove empty groups."""
 
-        file_list["files"] = [f for f in file_list["files"] if exists(f['file'])]
+        file_list["files"] = [f for f in file_list["files"] if os.path.exists(f['file'])]
         for g in file_list["groups"]:
-            file_list["groups"][g] = [f for f in file_list["groups"][g] if exists(f['file'])]
+            file_list["groups"][g] = [f for f in file_list["groups"][g] if os.path.exists(f['file'])]
             if len(file_list["groups"][g]) == 0:
                 del file_list["groups"][g]
 
@@ -164,13 +164,13 @@ class FavFileMgr(object):
 
         errors = False
 
-        if not exists(obj.file_name) or force:
+        if not os.path.exists(obj.file_name) or force:
             try:
                 # Save as a JSON file
                 cls.write_favs_file(obj.file_name, file_list)
-                obj.last_access = getmtime(obj.file_name)
+                obj.last_access = os.path.getmtime(obj.file_name)
             except Exception:
-                error('Failed to write %s!' % basename(obj.file_name))
+                error('Failed to write %s!' % os.path.basename(obj.file_name))
                 errors = True
         return errors
 
@@ -188,16 +188,16 @@ class FavFileMgr(object):
                 cls.create_favorite_list(obj, file_list, force=True)
 
             # Update internal list and access times
-            obj.last_access = getmtime(obj.file_name)
+            obj.last_access = os.path.getmtime(obj.file_name)
             obj.files = file_list
         except Exception:
             errors = True
             if cls.is_global_file(obj):
-                error('Failed to load %s!' % basename(obj.file_name))
+                error('Failed to load %s!' % os.path.basename(obj.file_name))
             else:
                 error(
                     'Failed to load %s!\nDid you rename your project?\n'
-                    'Try toggling "Per Projects" off and on and try again.' % basename(obj.file_name)
+                    'Try toggling "Per Projects" off and on and try again.' % os.path.basename(obj.file_name)
                 )
         return errors
 
@@ -210,11 +210,11 @@ class FavFileMgr(object):
         # Is project enabled
         FavProjects.project_adjust(obj, win_id, force)
 
-        if not exists(obj.file_name):
+        if not os.path.exists(obj.file_name):
             if force:
                 # Create file list if it doesn't exist
                 if cls.create_favorite_list(obj, {"version": 2, "files": [], "groups": {}}, force=True):
-                    error('Failed to create %s!' % basename(obj.file_name))
+                    error('Failed to create %s!' % os.path.basename(obj.file_name))
                     errors = True
                 else:
                     force = True
@@ -223,7 +223,7 @@ class FavFileMgr(object):
 
         cls.check_plugin_version(obj.file_name)
         # Only reload if file has been written since last access (or if forced reload)
-        if not errors and (force or getmtime(obj.file_name) != obj.last_access):
+        if not errors and (force or os.path.getmtime(obj.file_name) != obj.last_access):
             errors = cls.load_favorites(obj, clean=clean)
         return errors
 
@@ -308,7 +308,7 @@ class Favorites(object):
     def set(self, s, group_name=None):
         """Add file in global or group list."""
 
-        s = {"file": s, "alias": basename(s)}
+        s = {"file": s, "alias": os.path.basename(s)}
 
         if group_name is None:
             self.obj.files["files"].append(s)
