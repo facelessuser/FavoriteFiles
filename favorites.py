@@ -323,17 +323,13 @@ class Favorites(object):
     def file_index(self, s, group_name=None):
         """Check if file exists, and return its index in this case."""
 
-        def is_present_in(files_list):
-            """Returns the index if the file is present."""
-            for index, entry in enumerate(files_list):
-                if entry['file'] == s:
-                    return index
-            return None
+        obj = self.obj.files["files"] if group_name is None else self.obj.files["groups"][group_name]
 
-        if group_name is None:
-            index = is_present_in(self.obj.files["files"])
-        else:
-            index = is_present_in(self.obj.files["groups"][group_name])
+        index = None
+        for idx, entry in enumerate(obj):
+            if entry['file'] == s:
+                index = idx
+                break
 
         return index
 

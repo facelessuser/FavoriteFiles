@@ -88,7 +88,7 @@ class FavoriteFilesOpenCommand(sublime_plugin.WindowCommand):
     """Open the selected favorite(s)."""
 
     def open_file(self, value, group=False):
-        """Open the file(s).."""
+        """Open the file(s)."""
 
         if value == -1:
             return
@@ -156,7 +156,6 @@ class FavoriteFilesOpenCommand(sublime_plugin.WindowCommand):
             self.num_files = len(self.files)
             self.groups = Favs.all_groups()
             self.num_groups = len(self.groups)
-            # initialize group to None, will be set if descending into a group
             if self.num_files + self.num_groups > 0:
                 self.window.show_quick_panel(
                     self.files + self.groups,
