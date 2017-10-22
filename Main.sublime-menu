@@ -10,15 +10,15 @@
                 [
                     {
                         "caption": "Add to Favorite Files",
-                        "command": "add_favorite_file"
+                        "command": "favorite_files_add"
                     },
                     {
                         "caption": "Open Favorite File(s)",
-                        "command": "select_favorite_file"
+                        "command": "favorite_files_open"
                     },
                     {
                         "caption": "Remove Favorite File(s)",
-                        "command": "remove_favorite_file"
+                        "command": "favorite_files_remove"
                     }
                 ]
             }

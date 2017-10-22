@@ -14,7 +14,7 @@ from FavoriteFiles.lib.notify import error
 Favs = None
 
 
-class CleanOrphanedFavoritesCommand(sublime_plugin.WindowCommand):
+class FavoriteFilesCleanOrphansCommand(sublime_plugin.WindowCommand):
     """Clean out favorties that no longer exist."""
 
     def run(self):
@@ -25,7 +25,7 @@ class CleanOrphanedFavoritesCommand(sublime_plugin.WindowCommand):
             Favs.load(force=True, clean=True, win_id=self.window.id())
 
 
-class EditAliasFavoriteFileCommand(sublime_plugin.WindowCommand):
+class FavoriteFilesEditAliasCommand(sublime_plugin.WindowCommand):
     """Open the selected favorite(s)."""
 
     def edit_alias(self, value, group=False):
@@ -84,7 +84,7 @@ class EditAliasFavoriteFileCommand(sublime_plugin.WindowCommand):
                 error("No favorites found! Try adding some.")
 
 
-class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
+class FavoriteFilesOpenCommand(sublime_plugin.WindowCommand):
     """Open the selected favorite(s)."""
 
     def open_file(self, value, group=False):
@@ -166,7 +166,7 @@ class SelectFavoriteFileCommand(sublime_plugin.WindowCommand):
                 error("No favorites found! Try adding some.")
 
 
-class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
+class FavoriteFilesAddCommand(sublime_plugin.WindowCommand):
     """Add favorite(s) to the global group or the specified group."""
 
     def prompt_for_alias(self, name, group_name=None):
@@ -387,7 +387,7 @@ class AddFavoriteFileCommand(sublime_plugin.WindowCommand):
                     self.group_prompt()
 
 
-class RemoveFavoriteFileCommand(sublime_plugin.WindowCommand):
+class FavoriteFilesRemoveCommand(sublime_plugin.WindowCommand):
     """Remove the file favorites from the tracked list."""
 
     def remove(self, value, group=False, group_name=None):
@@ -452,7 +452,7 @@ class RemoveFavoriteFileCommand(sublime_plugin.WindowCommand):
                 error("No favorites to remove!")
 
 
-class TogglePerProjectFavoritesCommand(sublime_plugin.WindowCommand):
+class FavoriteFilesTogglePerProjectCommand(sublime_plugin.WindowCommand):
     """Toggle per project favorites."""
 
     def run(self):
