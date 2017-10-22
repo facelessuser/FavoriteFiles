@@ -12,7 +12,7 @@
         "command": "favorite_files_remove"
     },
     {
-        "caption": "Favorite Files: Edit Alias for File",
+        "caption": "Favorite Files: Edit File Alias",
         "command": "favorite_files_edit_alias"
     },
     {
