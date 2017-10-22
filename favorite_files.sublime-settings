@@ -8,5 +8,5 @@
     "use_sub_notify": true,
 
     // Prompt for a file alias every time you add a single file.
-    "always_ask_alias": true
+    "always_ask_alias": false
 }
