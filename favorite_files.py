@@ -8,13 +8,10 @@ Copyright (c) 2012 - 2015 Isaac Muse <isaacmuse@gmail.com>
 import sublime
 import sublime_plugin
 import os
-import re
 from FavoriteFiles.favorites import Favorites
 from FavoriteFiles.lib.notify import error
 
 Favs = None
-
-RE_ALIAS = re.compile(r'^[\w\d\- \.]*$', re.UNICODE)
 
 
 class FavoriteFilesCleanOrphansCommand(sublime_plugin.WindowCommand):
@@ -65,17 +62,8 @@ class FavoriteFilesEditAliasCommand(sublime_plugin.WindowCommand):
     def apply_alias(self, value):
         """Apply alias."""
 
-        if value is not None:
-            valid = RE_ALIAS.match(value) is not None
-            length = len(value) <= 40
-            if valid and length:
-                Favs.set_alias(value.strip(), self.current_index, self.group_name)
-            else:
-                if not valid:
-                    error("Alias must contain only Unicode word characters, numbers, spaces, hyphens, and periods!")
-                else:
-                    error("Alias cannot be greater than 40 characters!")
-                self.window.show_input_panel("Alias:", value, self.apply_alias, None, None)
+        if value is not None :
+            Favs.set_alias(value, self.current_index, self.group_name)
 
     def run(self):
         """Run the command."""
@@ -201,16 +189,7 @@ class FavoriteFilesAddCommand(sublime_plugin.WindowCommand):
         """Apply alias."""
 
         if value is not None:
-            valid = RE_ALIAS.match(value) is not None
-            length = len(value) <= 40
-            if valid and length:
-                Favs.set_alias(value.strip(), self.current_index, self.group_name)
-            else:
-                if not valid:
-                    error("Alias must contain only Unicode word characters, numbers, spaces, hyphens, and periods!")
-                else:
-                    error("Alias cannot be greater than 40 characters!")
-                self.window.show_input_panel("Alias:", value, self.apply_alias, None, None)
+            Favs.set_alias(value, self.current_index, self.group_name)
 
     def add(self, names, group_name=None):
         """Add favorites."""
