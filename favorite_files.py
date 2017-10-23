@@ -14,7 +14,7 @@ from FavoriteFiles.lib.notify import error
 
 Favs = None
 
-RE_ALIAS = re.compile(r'^[\w\d\- ]*$', re.UNICODE)
+RE_ALIAS = re.compile(r'^[\w\d\- \.]*$', re.UNICODE)
 
 
 class FavoriteFilesCleanOrphansCommand(sublime_plugin.WindowCommand):
@@ -72,7 +72,7 @@ class FavoriteFilesEditAliasCommand(sublime_plugin.WindowCommand):
                 Favs.set_alias(value.strip(), self.current_index, self.group_name)
             else:
                 if not valid:
-                    error("Alias must contain only word characters, numbers, spaces, and hyphens!")
+                    error("Alias must contain only Unicode word characters, numbers, spaces, hyphens, and periods!")
                 else:
                     error("Alias cannot be greater than 40 characters!")
                 self.window.show_input_panel("Alias:", value, self.apply_alias, None, None)
@@ -207,7 +207,7 @@ class FavoriteFilesAddCommand(sublime_plugin.WindowCommand):
                 Favs.set_alias(value.strip(), self.current_index, self.group_name)
             else:
                 if not valid:
-                    error("Alias must contain only word characters, numbers, spaces, and hyphens!")
+                    error("Alias must contain only Unicode word characters, numbers, spaces, hyphens, and periods!")
                 else:
                     error("Alias cannot be greater than 40 characters!")
                 self.window.show_input_panel("Alias:", value, self.apply_alias, None, None)

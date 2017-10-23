@@ -29,7 +29,7 @@ Remove a favorite file form your list or a group of favorite files.
 
 ### Favorite Files: Edit File Alias
 
-Edit a file's alias.  By default, the file will be listed in menus with it's actual file name, but this can be modified for a better, easier to remember name if needed.  Currently aliases names are limited to Unicode word characters, numbers, underscores, hyphens, and spaces. To revert the alias back to its original, true file name, simply change the alias to an empty string.
+Edit a file's alias.  By default, the file will be listed in menus with it's actual file name, but this can be modified for a better, easier to remember name if needed.  Currently aliases names are limited to Unicode word characters, numbers, spaces, `_`, `-`, and `.`. To revert the alias back to its original, true file name, simply change the alias to an empty string.
 
 ### Favorite Files: Toggle Per Project
 
