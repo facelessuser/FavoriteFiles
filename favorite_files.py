@@ -175,7 +175,7 @@ class FavoriteFilesAddCommand(sublime_plugin.WindowCommand):
         files = Favs.obj.files['groups'][group_name] if group_name is not None else Favs.obj.files['files']
 
         for idx, f in enumerate(files):
-            if f['file'] == name:
+            if f['alias'] == name:
                 index = idx
                 break
 
