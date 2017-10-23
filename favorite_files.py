@@ -62,7 +62,7 @@ class FavoriteFilesEditAliasCommand(sublime_plugin.WindowCommand):
     def apply_alias(self, value):
         """Apply alias."""
 
-        if value is not None :
+        if value is not None:
             Favs.set_alias(value, self.current_index, self.group_name)
 
     def run(self):
