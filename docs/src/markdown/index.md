@@ -27,6 +27,10 @@ Adds the current opened file, or all the files in the current window group, to y
 
 Remove a favorite file form your list or a group of favorite files.
 
+### Favorite Files: Edit File Alias
+
+Edit a file's alias.  By default, the file will be listed in menus with it's actual file name, but this can be modified for a better, easier to remember name if needed.  Currently aliases names are limited to Unicode word characters, numbers, underscores, hyphens, and spaces. To revert the alias back to its original, true file name, simply change the alias to an empty string.
+
 ### Favorite Files: Toggle Per Project
 
 Allows saving per project favorites. Per projects must be toggled on for each project you are in.  You can toggle back and forth between per project and global favorites.  You cannot switch to per project favorites if you do not have a project file saved.  Save your current window configuration to a project file, and your per project favorites list will be saved in the same location.
