@@ -294,12 +294,12 @@ class Favorites(object):
 
         if group_name is None:
             self.obj.files['files'][index] = {
-                "alias": alias,
+                "alias": (alias if alias else os.path.basename(self.obj.files['files'][index]['file'])),
                 "file": self.obj.files['files'][index]['file']
             }
         else:
             self.obj.files['groups'][group_name][index] = {
-                "alias": alias,
+                "alias": (alias if alias else os.path.basename(self.obj.files['groups'][group_name][index]['file'])),
                 "file": self.obj.files['groups'][group_name][index]['file']
             }
 
