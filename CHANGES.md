@@ -1,6 +1,6 @@
 # FavoriteFiles 1.6.0
 
-> Released Oct x, 2017
+> Released Oct 23, 2017
 
 - **NEW**: Add alias support.
 - **NEW**: Commands were renamed internally to be prefixed with `FavoriteFiles`.
