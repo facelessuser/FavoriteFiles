@@ -15,7 +15,7 @@ Favs = None
 
 
 class FavoriteFilesCleanOrphansCommand(sublime_plugin.WindowCommand):
-    """Clean out favorties that no longer exist."""
+    """Clean out favorites that no longer exist."""
 
     def run(self):
         """Run the command."""
@@ -42,7 +42,7 @@ class FavoriteFilesEditAliasCommand(sublime_plugin.WindowCommand):
                 self.current_index = value
                 self.window.show_input_panel("Alias:", name, self.apply_alias, None, None)
             else:
-                # Decend into group
+                # Descend into group
                 value -= self.num_files
                 self.group_name = self.groups[value][0].replace("Group: ", "", 1)
                 self.files = Favs.all_files(group_name=self.group_name)
@@ -132,7 +132,7 @@ class FavoriteFilesOpenCommand(sublime_plugin.WindowCommand):
                         self.window.run_command("hide_overlay")
                     sublime.set_timeout(lambda: fn(focus_view), 500)
             else:
-                # Decend into group
+                # Descend into group
                 value -= self.num_files
                 self.files = Favs.all_files(group_name=self.groups[value][0].replace("Group: ", "", 1))
                 self.num_files = len(self.files)
@@ -260,7 +260,7 @@ class FavoriteFilesAddCommand(sublime_plugin.WindowCommand):
     def show_groups(self, replace=False):
         """Prompt user with stored groups."""
 
-        # Show availabe groups
+        # Show available groups
         self.groups = Favs.all_groups()
         self.window.show_quick_panel(
             self.groups,
@@ -368,7 +368,7 @@ class FavoriteFilesAddCommand(sublime_plugin.WindowCommand):
             views = self.window.views()
 
             # If there is more than one view open allow saving all views
-            # TODO: Widget views probably show up here too, maybe look into exclduing them
+            # TODO: Widget views probably show up here too, maybe look into excluding them
             if len(views) > 1:
                 view_code = 1
                 # See if there is more than one group; if so allow saving of a specific group
@@ -415,7 +415,7 @@ class FavoriteFilesRemoveCommand(sublime_plugin.WindowCommand):
                 Favs.remove(name, group_name=group_name)
                 Favs.save(True)
             else:
-                # Decend into group
+                # Descend into group
                 value -= self.num_files
                 group_name = self.groups[value][0].replace("Group: ", "", 1)
                 self.files = Favs.all_files(group_name=group_name)

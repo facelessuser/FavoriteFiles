@@ -232,14 +232,14 @@ class Favorites(object):
     """High level favorites handling."""
 
     def __init__(self, global_file):
-        """Intialize."""
+        """Initialize."""
         self.obj = FavObj()
         self.obj.global_file = global_file
         self.obj.last_access = 0
         self.obj.file_name = self.obj.global_file
         self.open(self.obj)
 
-    def open(self, win_id=None):
+    def open(self, win_id=None):  # noqa: A003
         """Open favorites."""
 
         return FavFileMgr.load_favorite_files(self.obj, force=True, win_id=win_id)
@@ -305,7 +305,7 @@ class Favorites(object):
 
         self.save(True)
 
-    def set(self, s, group_name=None):
+    def set(self, s, group_name=None):  # noqa: A003
         """Add file in global or group list."""
 
         s = {"file": s, "alias": os.path.basename(s)}

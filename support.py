@@ -5,7 +5,7 @@ import textwrap
 import webbrowser
 import re
 
-__version__ = "1.6.0"
+__version__ = "1.6.1"
 __pc_name__ = 'FavoriteFiles'
 
 CSS = '''
@@ -68,24 +68,6 @@ class FavoriteFilesSupportInfoCommand(sublime_plugin.ApplicationCommand):
         except Exception:
             info["mdpopups_version"] = 'Version could not be acquired!'
 
-        try:
-            import markdown
-            info["markdown_version"] = format_version(markdown, 'version')
-        except Exception:
-            info["markdown_version"] = 'Version could not be acquired!'
-
-        try:
-            import jinja2
-            info["jinja_version"] = format_version(jinja2, '__version__')
-        except Exception:
-            info["jinja_version"] = 'Version could not be acquired!'
-
-        try:
-            import pygments
-            info["pygments_version"] = format_version(pygments, '__version__')
-        except Exception:
-            info["pygments_version"] = 'Version could not be acquired!'
-
         msg = textwrap.dedent(
             """\
             - ST ver.: %(version)s
@@ -94,9 +76,6 @@ class FavoriteFilesSupportInfoCommand(sublime_plugin.ApplicationCommand):
             - Plugin ver.: %(plugin_version)s
             - Install via PC: %(pc_install)s
             - mdpopups ver.: %(mdpopups_version)s
-            - markdown ver.: %(markdown_version)s
-            - pygments ver.: %(pygments_version)s
-            - jinja2 ver.: %(jinja_version)s
             """ % info
         )
 
@@ -108,7 +87,7 @@ class FavoriteFilesOpenSiteCommand(sublime_plugin.ApplicationCommand):
     """Open site links."""
 
     def run(self, url):
-        """Open the url."""
+        """Open the URL."""
 
         webbrowser.open_new_tab(url)
 

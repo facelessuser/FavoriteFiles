@@ -1,0 +1,14 @@
+Changelog
+FavoriteFiles
+JSON
+MERCHANTABILITY
+MkDocs
+NONINFRINGEMENT
+PyMdown
+SubNotify
+TODO
+Twemoji
+changelog
+macOS
+requesters
+sublicense
